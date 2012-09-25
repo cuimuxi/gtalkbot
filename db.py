@@ -107,7 +107,7 @@ def del_member(frm):
 def edit_member(email, nick = None, last=None):
     cursor, conn = get_cursor()
     if nick:
-        sql = 'update members set nick=? lastchange=? where email=?'
+        sql = 'update members set nick=?,lastchange=? where email=?'
         param = (nick, now, email)
     else:
         sql = 'update members set last=? where email=?'

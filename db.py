@@ -31,6 +31,8 @@ def _init_table():
         name   VARCHAR          null
         nick   VARCHAR          null 
         last   timestamp         // 最后发言
+        lastchange timestamp     // 最后修改
+        isonline   INT           // 是否在线(0否, 1 是)
         date timestamp           // 加入时间
         """
         cursor.execute("""
@@ -40,6 +42,8 @@ def _init_table():
                        name  VARCHAR,
                        nick VARCHAR,
                        last TIMESTAMP,
+                       lastchange TIMESTAMP,
+                       isonline INTEGER DEFAULT 1,
                        date TIMESTAMP
                        )
                       """)
@@ -48,17 +52,17 @@ def _init_table():
         创建聊天记录表 history
         key              type              default
         id         INTEGER PRIMARY KEY AUTO_INCREMNT null
-        uid        INTEGER       null
+        frmemail        VARCHAR       null
         content    TEXT          null
-        touid         INTEGER       null             // 0代表所有,其余对应相应的id
+        toemail     VARCHAR       null             // all代表所有,其余对应相应的email
         date       TIMESTAMP     (datetime('now', 'localtime'))
         """
         conn.commit()
         cursor.execute("""
             create table history(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                uid INTEGER,
-                touid INTEGER DEFAULT 0,
+                frmemail VARCHAR,
+                toemail VARCHAR DEFAULT "all",
                 content TEXT,
                 date TIMESTAMP
                 )""")
@@ -70,7 +74,6 @@ def _init_table():
         
     return cursor, conn
 
-
 def get_cursor():
     """
     获取数据库游标
@@ -81,10 +84,10 @@ def get_cursor():
 now = datetime.now()
 def add_member(frm):
     cursor, conn = get_cursor()
-    name = frm.getNode()
-    email = frm.getStripped()
-    sql = 'insert into members(email, name, nick, last, date) VALUES(?,?,?,?,?)'
-    cursor.execute(sql, (email, name, name, now, now))
+    name = frm.node
+    email = "%s@%s" % (name, frm.domain)
+    sql = 'insert into members(email, name, nick, last, lastchange, date) VALUES(?,?,?,?,?,?)'
+    cursor.execute(sql, (email, name, name, now, now, now))
     conn.commit()
     cursor.close()
     conn.close()
@@ -92,8 +95,9 @@ def add_member(frm):
 
 def del_member(frm):
     cursor, conn = get_cursor()
+    email = "%s@%s" % (frm.node, frm.domain)
     sql = 'delete from members where email=?'
-    cursor.execute(sql, (frm.getStripped(),))
+    cursor.execute(sql, (email,))
     conn.commit()
     cursor.close()
     conn.close()
@@ -102,8 +106,8 @@ def del_member(frm):
 def edit_member(email, nick = None, last=None):
     cursor, conn = get_cursor()
     if nick:
-        sql = 'update members set nick=? where email=?'
-        param = (nick, email)
+        sql = 'update members set nick=? lastchange=? where email=?'
+        param = (nick, now, email)
     else:
         sql = 'update members set last=? where email=?'
         param = (now, email)
@@ -114,7 +118,7 @@ def edit_member(email, nick = None, last=None):
     conn.close()
 
 
-def get_member(email = None, uid = None):
+def get_member(email = None, uid = None, nick = None):
     """
     提供email返回id
     提供uid返回email
@@ -126,6 +130,9 @@ def get_member(email = None, uid = None):
     elif email:
         sql = 'select id from members where email=?'
         param = (email, )
+    elif nick:
+        sql = 'select email from members where nick=?'
+        param = (nick, )
 
     cursor.execute(sql, param)
     r = cursor.fetchall()
@@ -136,17 +143,22 @@ def get_member(email = None, uid = None):
     return result
 
 
-def get_members(frm):
+def get_members(email = None):
     """
     获取所有成员
     """
     cursor, conn = get_cursor()
-    email = frm.getStripped()
-    sql = 'select email from members where email !=?'
-    param = (email, )
-    cursor.execute(sql, param)
-    r = cursor.fetchall()
-    result = [x[0] for x in r]
+    if email:
+        sql = 'select email from members where email !=?'
+        param = (email, )
+        cursor.execute(sql, param)
+        r = cursor.fetchall()
+        result = [x[0] for x in r]
+    else:
+        sql = 'select nick, email from members'
+        cursor.execute(sql)
+        r = cursor.fetchall()
+        result = [dict(nick=v[0], email = v[1]) for v in r]
     cursor.close()
     conn.close()
     return result
@@ -154,6 +166,7 @@ def get_members(frm):
 
 def get_nick(email = None, uid = None):
     cursor, conn = get_cursor()
+    print email
     if email:
         sql = 'select nick from members where email =?'
         param = (email,)
@@ -168,4 +181,12 @@ def get_nick(email = None, uid = None):
     conn.close()
     return result
 
-    
+
+def add_history(frm, to, content):
+    cursor, conn = get_cursor()
+    sql = 'insert into history(frmemail, toemail, content, date) VALUES(?,?,?,?)'
+    param = (frm, to, content, now)
+    cursor.execute(sql, param)
+    conn.commit()
+    cursor.close()
+    conn.close()

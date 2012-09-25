@@ -1,89 +1,201 @@
-#!/usr/bin/env python
-#-*- coding:utf-8
-"""
-    gtalk机器人,用于支持群组
-    author : cold night
-    email  : wh_linux@126.com
-"""
+#!/usr/bin/python -u
+#-*- coding:utf-8 -*-
 
-import xmpp
-import subprocess
-from settings import USER
-from settings import PASSWORD
-from settings import DEBUG
-from settings import ADMINS
-from common import get_logger
-from db import add_member, del_member, edit_member, get_member
-from db import get_members, get_nick
+import sys
+import logging
+import codecs
 
-
-logger = get_logger()
-
-def send_all_msg(cl,frm ,  message):
-    m = "[%s]: %s" % (get_nick(frm.getStripped()) , message)
-    tos = get_members(frm)
-    for to in tos:
-        cl.send(xmpp.Message(xmpp.JID(to), m))
-    
+from pyxmpp.all import JID,Iq,Presence,Message,StreamError
+from pyxmpp.jabber.client import JabberClient
+from pyxmpp.interface import implements
+from pyxmpp.interfaces import *
+from pyxmpp.streamtls import TLSSettings
+from settings import USER, PASSWORD
+from cmd import run_cmd, send_all_msg, send_command
+from db import add_member, del_member
 
 
 
-def messageHandle(cl, message_node):
-    """
-    """
-    frm = message_node.getFrom()
-    from_user = frm.getStripped()
-    edit_member(from_user)
-    cmd =message_node.getBody()
-    if not cmd : return
-    cmd = str(cmd)
-    if cmd.startswith('-'):
-        cmd = cmd[1:0]
-        if from_user in ADMINS:
-            process = subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-            message = process.stdout.read()
-            if message == "":
-                message = process.stderr.read()
+class BotHandler(object):
+
+    implements(IMessageHandlersProvider, IPresenceHandlersProvider)
+
+    def __init__(self, client):
+        """Just remember who created this."""
+        self.client = client
+
+    def get_message_handlers(self):
+        return [
+            ("normal", self.message),
+            ]
+
+    def get_presence_handlers(self):
+        return [
+            (None, self.presence),
+            ("unavailable", self.presence),
+            ("subscribe", self.presence_control),
+            ("subscribed", self.presence_control),
+            ("unsubscribe", self.presence_control),
+            ("unsubscribed", self.presence_control),
+            ]
+
+    def message(self,stanza):
+        subject=stanza.get_subject()
+        body=stanza.get_body()
+        t=stanza.get_type()
+        print u'Message from %s received.' % (unicode(stanza.get_from(),)),
+        if subject:
+            print u'Subject: "%s".' % (subject,),
+        if body:
+            print u'Body: "%s".' % (body,),
+        if t:
+            print u'Type: "%s".' % (t,)
+        else:
+            print u'Type: "normal".'
+        if stanza.get_type()=="headline":
+            # 'headline' messages should never be replied to
+            return True
+        if subject:
+            subject=u"Re: "+subject
+
+        if body:
+            if body.startswith('$'):
+                send_command(stanza, body)
             else:
-                message = "Access denied!\n"
+                m = send_all_msg(stanza, body)
+
+
+
+    def presence(self,stanza):
+        msg=u"%s has become " % (stanza.get_from())
+        t=stanza.get_type()
+        if t=="unavailable":
+            msg+=u"unavailable"
+        else:
+            msg+=u"available"
+        show=stanza.get_show()
+        if show:
+            msg+=u"(%s)" % (show,)
+
+        status=stanza.get_status()
+        if status:
+            msg+=u": "+status
+        print msg
+
+    def presence_control(self,stanza):
+        msg=unicode(stanza.get_from())
+        t=stanza.get_type()
+        frm = stanza.get_from()
+        if t=="subscribe":
+            msg+=u" has requested presence subscription."
+            add_member(frm)
+        elif t=="subscribed":
+            msg+=u" has accepted our presence subscription request."
+            body = "%s 加入群" % frm.node
+            send_all_msg(stanza, body)  
+            add_member(frm)
+        elif t=="unsubscribe":
+            msg+=u" has canceled his subscription of our."
+            del_member(frm)
+        elif t=="unsubscribed":
+            msg+=u" has canceled our subscription of his presence."
+            del_member(frm)
+
+        print msg
+
+        return stanza.make_accept_response()
+
+
+class VersionHandler(object):
     
+    implements(IIqHandlersProvider, IFeaturesProvider)
 
-            cl.send(xmpp.Message(message_node.getFrom(), message))
-    else:
-        send_all_msg(cl, frm, cmd)
+    def __init__(self, client):
+        self.client = client
+
+    def get_features(self):
+        return ["jabber:iq:version"]
+
+    def get_iq_get_handlers(self):
+        return [
+            ("query", "jabber:iq:version", self.get_version),
+            ]
+
+    def get_iq_set_handlers(self):
+        return []
+
+    def get_version(self,iq):
+        iq=iq.make_result_response()
+        q=iq.new_query("jabber:iq:version")
+        q.newTextChild(q.ns(),"name","Echo component")
+        q.newTextChild(q.ns(),"version","1.0")
+        return iq
+
+class Client(JabberClient):
+
+    def __init__(self, jid, password):
+        if not jid.resource:
+            jid=JID(jid.node, jid.domain, "bot")
+
+            tls_settings = TLSSettings(require = True, verify_peer = False)
+
+        JabberClient.__init__(self, jid, password, auth_methods=['sasl:PLAIN'],
+                disco_name="Pythoner Club", disco_type="bot",
+                tls_settings = tls_settings)
+
+        # add the separate components
+        self.interface_providers = [
+            VersionHandler(self),
+            BotHandler(self),
+            ]
+
+    def stream_state_changed(self,state,arg):
+        print "*** State changed: %s %r ***" % (state,arg)
+
+    def print_roster_item(self,item):
+        if item.name:
+            name=item.name
+        else:
+            name=u""
+        print (u'%s "%s" subscription=%s groups=%s'
+                % (unicode(item.jid), name, item.subscription,
+                    u",".join(item.groups)) )
+
+    def roster_updated(self,item=None):
+        if not item:
+            print u"My roster:"
+            for item in self.roster.get_items():
+                self.print_roster_item(item)
+            return
+        print u"Roster item updated:"
+        self.print_roster_item(item)
+
+encoding = "utf-8"
+sys.stdout = codecs.getwriter(encoding)(sys.stdout, errors = "replace")
+sys.stderr = codecs.getwriter(encoding)(sys.stderr, errors = "replace")
 
 
-def presenceHandle(cl, presence):
-    typ = presence.getType()
-    frm_user = presence.getFrom()
-    if typ == 'subscribe' or typ == 'subscribed':
-        cl.send(xmpp.Presence(to = frm_user, typ='subscribe'))
-        cl.send(xmpp.Presence(to = frm_user, typ='subscribed'))
-        if not get_member(frm_user.getStripped()):
-            add_member(frm_user)
-            logger.info('%s add in the group', frm_user.getStripped())
-    elif typ == 'unsubscribe' or typ == 'unsubscribed':
-        cl.send(xmpp.Presence(to = frm_user, typ='unsubscribe'))
-        cl.send(xmpp.Presence(to = frm_user, typ='unsubscribed'))
-        del_member(frm_user)
-        logger.info('%s leave the group', frm_user.getStripped())
-    else:
-        logger.warning('%s type is not support', typ)
+logger = logging.getLogger()
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO) # change to DEBUG for higher verbosity
 
 
-jid = xmpp.JID(USER)
+print u"creating client..."
 
-cl = xmpp.Client(jid.getDomain(), debug = DEBUG)
-cl.connect()
-r = cl.auth(jid.getNode(), PASSWORD, 'BOT')
-if r != 'sasl':
-    logger.fatal("Login Fatal")
-cl.RegisterHandler('message', messageHandle)
-cl.RegisterHandler('presence', presenceHandle)
+c=Client(JID(USER), PASSWORD)
 
-status = xmpp.Presence(status="Pythoner 俱乐部")
-cl.sendInitPresence()
-cl.send(status)
-logger.info('Online with user %s', USER)
-while cl.Process(1):
-    pass
+print u"connecting..."
+c.connect()
+
+print u"looping..."
+try:
+    # Component class provides basic "main loop" for the applitation
+    # Though, most applications would need to have their own loop and call
+    # component.stream.loop_iter() from it whenever an event on
+    # component.stream.fileno() occurs.
+    c.loop(None)
+except KeyboardInterrupt:
+    print u"disconnecting..."
+    c.disconnect()
+
+print u"exiting..."

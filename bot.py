@@ -88,19 +88,19 @@ class BotHandler(object):
         frm = stanza.get_from()
         if t=="subscribe":
             msg+=u" has requested presence subscription."
-            add_member(frm)
-        elif t=="subscribed":
-            msg+=u" has accepted our presence subscription request."
             body = "%s 加入群" % frm.node
             send_all_msg(stanza, body)  
             add_member(frm)
+        elif t=="subscribed":
+            msg+=u" has accepted our presence subscription request."
+            add_member(frm)
         elif t=="unsubscribe":
             msg+=u" has canceled his subscription of our."
+            body = "%s 离开群" % frm.node
+            send_all_msg(stanza, body)
             del_member(frm)
         elif t=="unsubscribed":
             msg+=u" has canceled our subscription of his presence."
-            body = "%s 离开群" % frm.node
-            send_all_msg(stanza, body)
             del_member(frm)
 
         print msg

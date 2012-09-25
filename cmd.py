@@ -84,7 +84,7 @@ class CommandHandler():
     def nick(self, stanza, *args):
         """更改昵称 eg. $nick yournewnickname"""
         if len(args) >= 1:
-            nick = args[0:]
+            nick = ' '.join(args[0:])
             frm = stanza.get_from()
             email = "%s@%s" % (frm.node, frm.domain)
             oldnick = get_nick(email)

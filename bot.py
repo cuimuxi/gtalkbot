@@ -99,6 +99,8 @@ class BotHandler(object):
             del_member(frm)
         elif t=="unsubscribed":
             msg+=u" has canceled our subscription of his presence."
+            body = "%s 离开群" % frm.node
+            send_all_msg(stanza, body)
             del_member(frm)
 
         print msg

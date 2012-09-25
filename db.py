@@ -86,6 +86,7 @@ def add_member(frm):
     cursor, conn = get_cursor()
     name = frm.node
     email = "%s@%s" % (name, frm.domain)
+    if get_member(email = email):return
     sql = 'insert into members(email, name, nick, last, lastchange, date) VALUES(?,?,?,?,?,?)'
     cursor.execute(sql, (email, name, name, now, now, now))
     conn.commit()

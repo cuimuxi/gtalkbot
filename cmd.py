@@ -102,14 +102,17 @@ class CommandHandler():
             body = '\n'.join(body)
         return self._send_cmd_result(stanza, body)
 
+    def version(self, stanza, *args):
+        """显示版本信息"""
+        body = "Version 0.1\nAuthor:cold night(wh_linux@126.com)\n"
+        return self._send_cmd_result(stanza, body)
 
     @classmethod
     def _send_cmd_result(cls, stanza, body):
         """返回命令结果"""
-        message = Message(
-            to_jid = stanza.get_from(),
-            from_jid = stanza.get_to(),
-            body = body)
+        frm = stanza.get_from()
+        email = '%s@%s' % (frm.node, frm.domain)
+        message = send_msg(stanza, email, body)
         #stanza.stream.send(message)
         return message
 
@@ -168,7 +171,7 @@ def send_command(stanza, body):
 def send_msg(stanza, to_email, body):
     m=Message(
         to_jid=JID(to_email),
-        from_jid=stanza.get_to(),
+        #from_jid=stanza.get_to(),
         stanza_type=stanza.get_type(),
         body=body)
     #stanza.stream.send(m)

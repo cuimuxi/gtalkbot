@@ -40,14 +40,12 @@ class BotHandler(object):
             ]
 
     def message(self,stanza):
-        subject=stanza.get_subject()
         body=stanza.get_body()
+        subject=stanza.get_subject()
         t=stanza.get_type()
         print u'Message from %s received.' % (unicode(stanza.get_from(),)),
         if subject:
             print u'Subject: "%s".' % (subject,),
-        if body:
-            print u'Body: "%s".' % (body,),
         if t:
             print u'Type: "%s".' % (t,)
         else:
@@ -57,13 +55,28 @@ class BotHandler(object):
             return True
         if subject:
             subject=u"Re: "+subject
+        if not body:
+            print u'Body: "%s".' % (body,),
+            return
+        if body.startswith('$'):
+            m = send_command(stanza, body)
+        else:
+            m = send_all_msg(stanza, body)
+        print 'messge',m
+        print 'message dir', dir(m)
+        if isinstance(m, list):
+            for i in m:
+                print 'message to', i.get_to()
+                print 'message type', i.get_type()
+                print 'message body', i.get_body()
+        else:
+            print 'message to', m.get_to()
+            print 'message body', m.get_body()
+            print 'message type', m.get_type()
 
-        if body:
-            if body.startswith('$'):
-                m = send_command(stanza, body)
-            else:
-                m = send_all_msg(stanza, body)
-            return m
+
+        return m
+
 
 
     def presence(self,stanza):

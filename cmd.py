@@ -80,8 +80,8 @@ class CommandHandler():
             p = Presence(from_jid = stanza.get_to(),
                          to_jid = JID(to),
                          stanza_type = 'subscribed')
-            m = stanza.stream.send(p)
-            return [m,p,p1]
+            #m = stanza.stream.send(p)
+            return [p,p1]
         else:
             return self.help(stanza, 'invite')
 

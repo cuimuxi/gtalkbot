@@ -109,7 +109,6 @@ class CommandHandler():
         message = Message(
             to_jid = stanza.get_from(),
             from_jid = stanza.get_to(),
-            subject = stanza.get_subject(),
             body = body)
         #stanza.stream.send(message)
         return message

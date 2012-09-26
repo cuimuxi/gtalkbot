@@ -63,7 +63,7 @@ class BotHandler(object):
                 m = send_command(stanza, body)
             else:
                 m = send_all_msg(stanza, body)
-        return m
+            return m
 
 
     def presence(self,stanza):

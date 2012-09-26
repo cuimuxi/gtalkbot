@@ -14,42 +14,6 @@ from pyxmpp.all import Presence
 
 DEBUG = True
 
-def send_command(stanza, body):
-    cmd = body[1:]
-    m = run_cmd(cmd, stanza)
-    return m
-
-
-def send_msg(stanza, to_email, body):
-    m=Message(
-        to_jid=JID(to_email),
-        from_jid=stanza.get_to(),
-        stanza_type=stanza.get_type(),
-        body=body)
-    stanza.stream.send(m)
-    return m
-
-def send_all_msg(stanza, body):
-    frm = stanza.get_from()
-    email = '%s@%s' % (frm.node, frm.domain) 
-    nick = get_nick(email)
-    add_history(email, 'all', body)
-    body = "[%s] %s" % (nick, body)
-    tos = get_members(email)
-    ms = []
-    for to in tos:
-        m = send_msg(stanza, to, body)
-        ms.append(m)
-    return ms
-
-
-def send_to_msg(stanza, to, body):
-    frm = stanza.get_from()
-    email = '%s@%s' % (frm.node, frm.domain) 
-    nick = get_nick(email)
-    add_history(email, to, body)
-    body = "[%s 悄悄对你说] %s" % (nick, body)
-    return send_msg(stanza, to, body)
 
 
 
@@ -193,3 +157,42 @@ class AdminCMDHandle(CommandHandler):
             pass
 
 run_cmd = CommandHandler._run_cmd
+
+
+
+def send_command(stanza, body):
+    cmd = body[1:]
+    m = run_cmd(cmd, stanza)
+    return m
+
+
+def send_msg(stanza, to_email, body):
+    m=Message(
+        to_jid=JID(to_email),
+        from_jid=stanza.get_to(),
+        stanza_type=stanza.get_type(),
+        body=body)
+    stanza.stream.send(m)
+    return m
+
+def send_all_msg(stanza, body):
+    frm = stanza.get_from()
+    email = '%s@%s' % (frm.node, frm.domain)
+    nick = get_nick(email)
+    add_history(email, 'all', body)
+    body = "[%s] %s" % (nick, body)
+    tos = get_members(email)
+    ms = []
+    for to in tos:
+        m = send_msg(stanza, to, body)
+        ms.append(m)
+    return ms
+
+
+def send_to_msg(stanza, to, body):
+    frm = stanza.get_from()
+    email = '%s@%s' % (frm.node, frm.domain) 
+    nick = get_nick(email)
+    add_history(email, to, body)
+    body = "[%s 悄悄对你说] %s" % (nick, body)
+    return send_msg(stanza, to, body)

@@ -16,7 +16,8 @@ DEBUG = True
 
 def send_command(stanza, body):
     cmd = body[1:]
-    cmds = run_cmd(cmd, stanza)
+    m = run_cmd(cmd, stanza)
+    return m
 
 
 def send_msg(stanza, to_email, body):
@@ -26,6 +27,7 @@ def send_msg(stanza, to_email, body):
         stanza_type=stanza.get_type(),
         body=body)
     stanza.stream.send(m)
+    return m
 
 def send_all_msg(stanza, body):
     frm = stanza.get_from()
@@ -34,8 +36,11 @@ def send_all_msg(stanza, body):
     add_history(email, 'all', body)
     body = "[%s] %s" % (nick, body)
     tos = get_members(email)
+    ms = []
     for to in tos:
-        send_msg(stanza, to, body)
+        m = send_msg(stanza, to, body)
+        ms.append(m)
+    return ms
 
 
 def send_to_msg(stanza, to, body):
@@ -44,7 +49,7 @@ def send_to_msg(stanza, to, body):
     nick = get_nick(email)
     add_history(email, to, body)
     body = "[%s 悄悄对你说] %s" % (nick, body)
-    send_msg(stanza, to, body)
+    return send_msg(stanza, to, body)
 
 
 
@@ -55,6 +60,7 @@ class CommandHandler():
         比如敲入 -list 则对应list方法
         命令具有统一接收stanza固定参数和变参**kargs,
         需要参数自行从kargs里提取
+        所有命令须返回Message/Presence的实例
     """
     def list(self, stanza, *args):
         """列出所有成员"""
@@ -74,11 +80,13 @@ class CommandHandler():
             receiver = get_member(nick = nick)
             body = ' '.join(args[1:])
             if not receiver:
-               self._send_cmd_result(stanza, "%s 用户不存在" % nick)
+                m  = self._send_cmd_result(stanza, "%s 用户不存在" % nick)
             else:
-                send_to_msg(stanza, receiver, body)
+                m = send_to_msg(stanza, receiver, body)
         else:
-            self.help(stanza, 'mgsto')
+            m = self.help(stanza, 'mgsto')
+
+        return m
 
 
     def nick(self, stanza, *args):
@@ -90,10 +98,12 @@ class CommandHandler():
             oldnick = get_nick(email)
             edit_member(email, nick = nick)
             body = "%s 更改昵称为 %s" % (oldnick, nick)
-            send_all_msg(stanza, body)
+            m = send_all_msg(stanza, body)
         else:
-            self.help(stanza, 'nick')
-            
+            m = self.help(stanza, 'nick')
+
+
+        return m
 
     def invite(self, stanza, *args):
         """邀请好友加入 eg. $invite <yourfirendemail>"""
@@ -106,10 +116,10 @@ class CommandHandler():
             p = Presence(from_jid = stanza.get_to(),
                          to_jid = JID(to),
                          stanza_type = 'subscribed')
-            stanza.stream.send(p)
+            m = stanza.stream.send(p)
+            return [m,p]
         else:
-            self.help(stanza, 'invite')
-            
+            return self.help(stanza, 'invite')
 
     def help(self, stanza, *args):
         """显示帮助"""
@@ -126,9 +136,9 @@ class CommandHandler():
                 r = "$%s  %s" % (f.get('name'), f.get('func').__doc__)
                 body.append(r)
             body = '\n'.join(body)
-        self._send_cmd_result(stanza, body)
+        return self._send_cmd_result(stanza, body)
 
-        
+
     @classmethod
     def _send_cmd_result(cls, stanza, body):
         """返回命令结果"""
@@ -138,8 +148,9 @@ class CommandHandler():
             subject = stanza.get_subject(),
             body = body)
         stanza.stream.send(message)
+        return message
 
-        
+
     @classmethod
     def _get_cmd(cls, name = None):
         if name:
@@ -147,8 +158,8 @@ class CommandHandler():
         else:
             r = [{'name':k, 'func':v} for k, v in cls.__dict__.items() if not k.startswith('_')]
             return r
-                    
-    
+
+
     def __getattr__(self, name):
         return self.help
 
@@ -163,13 +174,22 @@ class CommandHandler():
             else:
                 args.append(v)
         if DEBUG:
-            cls.__dict__.get(c)(cls, stanza, *args)
+            m = cls.__dict__.get(c)(cls, stanza, *args)
         else:
             try:
-                cls.__dict__.get(c)(cls, stanza, *args)
-            except:
-                cls.__dict__.get('help')(cls, stanza, c)
-            
+                m = cls.__dict__.get(c)(cls, stanza, *args)
+            except Exception as e:
+                print 'Error', e.message
+                m = cls.__dict__.get('help')(cls, stanza, c)
 
+        return m
+
+
+class AdminCMDHandle(CommandHandler):
+    """管理员命令"""
+    def py(self, stanza, *args):
+        """执行python 语句返回结果"""
+        if len(args) >= 1:
+            pass
 
 run_cmd = CommandHandler._run_cmd

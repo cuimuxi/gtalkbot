@@ -60,10 +60,10 @@ class BotHandler(object):
 
         if body:
             if body.startswith('$'):
-                send_command(stanza, body)
+                m = send_command(stanza, body)
             else:
                 m = send_all_msg(stanza, body)
-
+        return m
 
 
     def presence(self,stanza):
@@ -109,7 +109,7 @@ class BotHandler(object):
 
 
 class VersionHandler(object):
-    
+
     implements(IIqHandlersProvider, IFeaturesProvider)
 
     def __init__(self, client):

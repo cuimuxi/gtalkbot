@@ -73,15 +73,15 @@ class CommandHandler():
         """邀请好友加入 eg. $invite <yourfirendemail>"""
         if len(args) >= 1:
             to = args[0]
-            p = Presence(from_jid = stanza.get_to(),
+            p1 = Presence(from_jid = stanza.get_to(),
                          to_jid = JID(to),
                          stanza_type = 'subscribe')
-            stanza.stream.send(p)
+            #stanza.stream.send(p)
             p = Presence(from_jid = stanza.get_to(),
                          to_jid = JID(to),
                          stanza_type = 'subscribed')
             m = stanza.stream.send(p)
-            return [m,p]
+            return [m,p,p1]
         else:
             return self.help(stanza, 'invite')
 
@@ -111,7 +111,7 @@ class CommandHandler():
             from_jid = stanza.get_to(),
             subject = stanza.get_subject(),
             body = body)
-        stanza.stream.send(message)
+        #stanza.stream.send(message)
         return message
 
 
@@ -172,7 +172,7 @@ def send_msg(stanza, to_email, body):
         from_jid=stanza.get_to(),
         stanza_type=stanza.get_type(),
         body=body)
-    stanza.stream.send(m)
+    #stanza.stream.send(m)
     return m
 
 def send_all_msg(stanza, body):

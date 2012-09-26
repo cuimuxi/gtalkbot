@@ -71,7 +71,7 @@ def _init_table():
         conn = sqlite3.connect(DB_NAME)
         conn.isolation_level = None
         cursor = conn.cursor()
-        
+
     return cursor, conn
 
 def get_cursor():

@@ -34,7 +34,7 @@ class CommandHandler():
             r = '%s <%s>' % (m.get('nick'), m.get('email'))
             body.append(r)
 
-        self._send_cmd_result(stanza, '\n'.join(body))
+        return self._send_cmd_result(stanza, '\n'.join(body))
 
 
     def msgto(self, stanza, *args):

@@ -201,7 +201,7 @@ def send_all_msg(stanza, body):
         r = re.findall(r'@<(.*?)>', body)
         mem = [get_member(nick=n) for n in r if get_member(nick = n)]
         if mem:
-            if body.startswith('@'):
+            if body.startswith('@<'):
                 b = re.sub(r'^@<.*?>', '', body)
                 return send_to_msg(stanza, mem[0], b)
             b = '%s 提到了你说: %s' % (nick, body)

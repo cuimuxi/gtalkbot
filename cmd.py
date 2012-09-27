@@ -17,6 +17,17 @@ DEBUG = True
 
 
 
+def http_helper(url, param):
+    import urllib, urllib2
+    data = urllib.urlencode(param)
+    req =urllib2.Request(url,data)
+    req.add_header("User-Agent", "Mozilla/5.0+(compatible;+Googlebot/2.1;++http://www.google.com/bot.html)")
+    fd = urllib2.urlopen(req)
+    result =  fd.read()
+    return result
+
+
+
 class CommandHandler():
     """
         生成命令
@@ -153,10 +164,8 @@ class CommandHandler():
 
 class AdminCMDHandle(CommandHandler):
     """管理员命令"""
-    def py(self, stanza, *args):
-        """执行python 语句返回结果"""
-        if len(args) >= 1:
-            pass
+    def log(self, stanza, *args):
+        """查看日志"""
 
 run_cmd = CommandHandler._run_cmd
 

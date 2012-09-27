@@ -7,6 +7,7 @@ from db import get_members
 from db import get_nick, get_member
 from db import edit_member
 from db import add_history
+from db import is_online
 from pyxmpp.all import Message
 from pyxmpp.all import JID
 from pyxmpp.all import Presence
@@ -38,20 +39,29 @@ class CommandHandler():
     """
     def list(self, stanza, *args):
         """列出所有成员"""
+        frm = stanza.get_from()
+        femail = "%s@%s" % (frm.node, frm.domain)
         members = get_members()
         body = []
         for m in members:
+            email = m.get('email')
             r = '%s <%s>' % (m.get('nick'), m.get('email'))
+            if email == femail:
+                r = '** ' + r
+            elif is_online(email):
+                r = ' * ' + r
+            else:
+                r = '  ' + r
             body.append(r)
-
+        body = sorted(body, key = lambda k:k[1], reverse=True)
         return self._send_cmd_result(stanza, '\n'.join(body))
-        
+
     def trans(self, stanza, *args):
         """英汉翻译 e.g $trans en zh-CN hello/$trans zh-Cn en 你好"""
         return self._send_cmd_result(stanza,trans([x for x in args]))
 
     def msgto(self, stanza, *args):
-        """单独给某用户发消息 eg $msgto nick hello(给nick发送hello) \n\t\t也可以使用@<nick> 消息"""
+        """单独给某用户发消息 eg $msgto nick hello(给nick发送hello) 也可以使用@<nick> 消息"""
         if len(args) > 1:
             nick = args[0]
             receiver = get_member(nick = nick)
@@ -121,7 +131,7 @@ class CommandHandler():
                     'cold night(wh_linux@126.com)',
                     'eleven.i386(eleven.i386@gmail.com)',
                  ]
-        body = "Version 0.1\nAuthors\n\t%s\n" % '\n\t'.join(author)
+        body = "Version 0.2\nAuthors\n\t%s\n" % '\n\t'.join(author)
         return self._send_cmd_result(stanza, body)
 
     @classmethod

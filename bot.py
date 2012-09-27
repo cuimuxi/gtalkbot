@@ -11,8 +11,8 @@ from pyxmpp.interface import implements
 from pyxmpp.interfaces import *
 from pyxmpp.streamtls import TLSSettings
 from settings import USER, PASSWORD
-from cmd import run_cmd, send_all_msg, send_command
-from db import add_member, del_member
+from cmd import send_all_msg, send_command
+from db import add_member, del_member, change_status
 
 
 
@@ -80,17 +80,20 @@ class BotHandler(object):
 
 
     def presence(self,stanza):
-        msg=u"%s has become " % (stanza.get_from())
+        frm = stanza.get_from()
+        msg=u"%s has become " % (frm)
         t=stanza.get_type()
+        status=stanza.get_status()
+        show=stanza.get_show()
         if t=="unavailable":
             msg+=u"unavailable"
+            change_status(frm, 0, show)
         else:
             msg+=u"available"
-        show=stanza.get_show()
+            change_status(frm, 1, show)
         if show:
             msg+=u"(%s)" % (show,)
 
-        status=stanza.get_status()
         if status:
             msg+=u": "+status
         print msg

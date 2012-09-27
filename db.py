@@ -47,7 +47,7 @@ def _init_table():
                        date TIMESTAMP
                        )
                       """)
-        
+
         """
         创建聊天记录表 history
         key              type              default
@@ -67,6 +67,24 @@ def _init_table():
                 date TIMESTAMP
                 )""")
         conn.commit()
+
+        """
+        状态表 status
+        `key`               `type`              `default`
+        email      VARCHAR                       null
+        resource   VARCHAR                      null
+        status     INTEGER                       1 // 1在线,0不在线
+        statustext VARCHAR                      null
+        """
+        cursor.execute("""
+                       create table status(
+                       email VARCHAR,
+                       resource VARCHAR,
+                       status INTEGER DEFAULT 1,
+                       statustext VARCHAR)
+                       """
+                      )
+        conn.commit()
     else:
         conn = sqlite3.connect(DB_NAME)
         conn.isolation_level = None
@@ -80,6 +98,47 @@ def get_cursor():
     """
     return _init_table()
 
+
+def get_status(email, resource = None):
+    if resource:
+        sql = 'select status,statustext from status where email=? and resource=?'
+        param = (email, resource)
+    else:
+        sql = 'select status, statustext from status where email=?'
+        param = (email,)
+
+    cursor, conn = get_cursor()
+    cursor.execute(sql, param)
+    r = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return r
+
+
+def change_status(frm, status, statustext):
+    """改变用户状态"""
+    email = "%s@%s" % (frm.node, frm.domain)
+    resource = frm.resource
+    stat = get_status(email, resource)
+    if stat:
+        sql = 'update status set status=?,statustext=? where email=? and resource=?'
+    else:
+        sql = 'insert into status(status, statustext,email, resource) VALUES(?,?,?,?)'
+    print type(status)
+    param = (status, statustext, email, resource)
+    cursor, conn = get_cursor()
+    cursor.execute(sql, param)
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+def is_online(email):
+    sql = 'select status from status where email=? and status=1'
+    cursor, conn = get_cursor()
+    cursor.execute(sql,(email,))
+    r = True if cursor.fetchall() else False
+    return r
 
 now = datetime.now()
 def add_member(frm):

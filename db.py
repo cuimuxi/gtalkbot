@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
-"""
-数据库连接
-author: cold night
-email : wh_linux@126.com
-"""
+#
+#
+# Author : cold night
+# email  : wh_linux@126.com
+# 2012-09-27 13:00
+#   + 增加一张表,为status表
+#   + 增加对状态操作的函数
 
 import os
 import sqlite3

@@ -2,6 +2,13 @@
 #-*- coding:utf-8 -*-
 #
 # 生成命令
+#
+# Author : cold night
+# email  : wh_linux@126.com
+# 2012-09-27 13:38
+#   + 增加$list 时用户是否在线
+#   + 增加@功能
+#   + 增加@<>为首发私信
 
 from db import get_members
 from db import get_nick, get_member
@@ -54,6 +61,7 @@ class CommandHandler():
                 r = '  ' + r
             body.append(r)
         body = sorted(body, key = lambda k:k[1], reverse=True)
+        body.insert(0, 'Note:** yourself \t* online')
         return self._send_cmd_result(stanza, '\n'.join(body))
 
     def trans(self, stanza, *args):

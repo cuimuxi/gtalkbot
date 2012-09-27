@@ -1,5 +1,5 @@
 2012-09-27 12:30
-新添加一张表,如果之前本地存在了group.db这个数据库文件如要收工添加这张表
+新添加一张表,如果之前本地存在了group.db这个数据库文件如要手工工添加这张表
 
 >>> import sqlite3
 >>> conn = sqlite3.connect('{YOURBOTPAHT}/group.db')

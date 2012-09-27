@@ -167,6 +167,9 @@ class Client(JabberClient):
             BotHandler(self),
             ]
 
+    def session_started(self):
+        p = Presence(status = "Pythoner Club, Python/Linux/Vim 技术交流")
+        self.stream.send(p)
     def stream_state_changed(self,state,arg):
         print "*** State changed: %s %r ***" % (state,arg)
 

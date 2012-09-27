@@ -10,6 +10,8 @@ from db import add_history
 from pyxmpp.all import Message
 from pyxmpp.all import JID
 from pyxmpp.all import Presence
+from fanyi import trans
+from fanyi import isen
 
 
 DEBUG = True
@@ -35,7 +37,10 @@ class CommandHandler():
             body.append(r)
 
         return self._send_cmd_result(stanza, '\n'.join(body))
-
+        
+    def trans(self, stanza, *args):
+        """英汉翻译"""
+        return self._send_cmd_result(stanza,trans([x for x in args]))
 
     def msgto(self, stanza, *args):
         """单独给某用户发消息 eg $msgto nick hello(给nick发送hello)"""
@@ -178,6 +183,7 @@ def send_msg(stanza, to_email, body):
     return m
 
 def send_all_msg(stanza, body):
+    transbody = ""
     frm = stanza.get_from()
     email = '%s@%s' % (frm.node, frm.domain)
     nick = get_nick(email)

@@ -28,7 +28,7 @@ def http_helper(url, param):
     import urllib, urllib2
     data = urllib.urlencode(param)
     req =urllib2.Request(url,data)
-    req.add_header("User-Agent", "Mozilla/5.0+(compatible;+Googlebot/2.1;++http://www.google.com/bot.html)")
+    req.add_header("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:14.0) Gecko/20100101 Firefox/14.0.1")
     fd = urllib2.urlopen(req)
     result =  fd.read()
     return result
@@ -40,9 +40,9 @@ class CommandHandler():
         生成命令
         命令对应着方法
         比如敲入 -list 则对应list方法
-        命令具有统一接收stanza固定参数和变参**kargs,
+        命令具有统一接收stanza固定参数和变参*args,
         需要参数自行从kargs里提取
-        所有命令须返回Message/Presence的实例
+        所有命令须返回Message/Presence的实例或实例列表
     """
     def list(self, stanza, *args):
         """列出所有成员"""
@@ -61,11 +61,11 @@ class CommandHandler():
                 r = '  ' + r
             body.append(r)
         body = sorted(body, key = lambda k:k[1], reverse=True)
-        body.insert(0, 'Note : ** yourself \t* online')
+        body.insert(0, 'Pythoner Club 所有成员(** 表示你自己, * 表示在线):')
         return self._send_cmd_result(stanza, '\n'.join(body))
 
     def trans(self, stanza, *args):
-        """英汉翻译 e.g $trans en zh-CN hello/$trans zh-Cn en 你好"""
+        """英汉翻译"""
         return self._send_cmd_result(stanza,trans([x for x in args]))
 
     def msgto(self, stanza, *args):
@@ -130,6 +130,7 @@ class CommandHandler():
             for f in funcs:
                 r = "$%s  %s" % (f.get('name'), f.get('func').__doc__)
                 body.append(r)
+            body = sorted(body, key=lambda k:k[1])
             body = '\n'.join(body)
         return self._send_cmd_result(stanza, body)
 
@@ -228,6 +229,8 @@ def send_all_msg(stanza, body):
             b = '%s 提到了你说: %s' % (nick, body)
             ml = [send_to_msg(stanza, to, b) for to in mem]
             ms += ml
+    elif body.strip() == 'help':
+        return run_cmd('help', stanza)
     body = "[%s] %s" % (nick, body)
     for to in tos:
         m = send_msg(stanza, to, body)

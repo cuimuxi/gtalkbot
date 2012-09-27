@@ -9,12 +9,14 @@
 #   + 增加$list 时用户是否在线
 #   + 增加@功能
 #   + 增加@<>为首发私信
+#   + 增加查看命令历史
 
 from db import get_members
 from db import get_nick, get_member
 from db import edit_member
 from db import add_history
 from db import is_online
+from db import get_history
 from pyxmpp.all import Message
 from pyxmpp.all import JID
 from pyxmpp.all import Presence
@@ -22,6 +24,9 @@ from fanyi import trans
 from fanyi import isen
 from settings import DEBUG
 
+
+
+get_email = lambda frm:"%s@%s" % (frm.node, frm.domain)
 
 
 def http_helper(url, param):
@@ -91,9 +96,12 @@ class CommandHandler():
             frm = stanza.get_from()
             email = "%s@%s" % (frm.node, frm.domain)
             oldnick = get_nick(email)
-            edit_member(email, nick = nick)
-            body = "%s 更改昵称为 %s" % (oldnick, nick)
-            m = send_all_msg(stanza, body)
+            r = edit_member(email, nick = nick)
+            if r:
+                body = "%s 更改昵称为 %s" % (oldnick, nick)
+                m = send_all_msg(stanza, body)
+            else:
+                m = _send_cmd_result(stanza, '昵称已存在')
         else:
             m = self.help(stanza, 'nick')
 
@@ -134,6 +142,16 @@ class CommandHandler():
             body = '\n'.join(body)
         return self._send_cmd_result(stanza, body)
 
+
+    def history(self, stanza, *args):
+        """<from> <index> <size> 显示聊天历史"""
+        email = get_email(stanza.get_from())
+        if args:
+            return self._send_cmd_result(stanza, get_history(email, *args))
+        else:
+            return self._send_cmd_result(stanza, get_history(email))
+    
+    
     def version(self, stanza, *args):
         """显示版本信息"""
         author = [
@@ -143,6 +161,7 @@ class CommandHandler():
         body = "Version 0.2\nAuthors\n\t%s\n" % '\n\t'.join(author)
         return self._send_cmd_result(stanza, body)
 
+    
     @classmethod
     def _send_cmd_result(cls, stanza, body):
         """返回命令结果"""

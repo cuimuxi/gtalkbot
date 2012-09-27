@@ -168,6 +168,8 @@ def del_member(frm):
 def edit_member(email, nick = None, last=None):
     cursor, conn = get_cursor()
     if nick:
+        cursor.execute('select * from members where nick=?',(nick,))
+        if cursor.fetchall():return False
         sql = 'update members set nick=?,lastchange=? where email=?'
         param = (nick, now, email)
     else:
@@ -178,6 +180,7 @@ def edit_member(email, nick = None, last=None):
     conn.commit()
     cursor.close()
     conn.close()
+    return True
 
 
 def get_member(email = None, uid = None, nick = None):
@@ -253,3 +256,43 @@ def add_history(frm, to, content):
     conn.commit()
     cursor.close()
     conn.close()
+
+
+def get_history(sef, frm = None, index = 1,  size = 10):
+    cursor, conn = get_cursor()
+    limit = int(size)
+    skip = (int(index) -1) * 10
+    
+    basesql = 'select id, frmemail, toemail, content, date from history where '
+
+    if not frm:
+        sql = basesql + 'toemail=? or toemail=? ORDER BY id DESC limit ? offset ?'
+        param = (sef, 'all', limit, skip)
+    else:
+        frmemail = get_member(nick=frm)
+        sql = basesql +'(toemail=? or toemail=?) and frmemail=? ORDER BY id DESC limit ? offset ?'
+        param = ('all',sef, frmemail, limit, skip)
+    cursor.execute(sql, param)
+    tmp = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    result = []
+    for r in tmp:
+        t = {}
+        t['id'], t['frm'], t['to'], t['content'], t['date'] = r
+        fr = format(t)
+        result.append(fr)
+    return '\n'.join(result)
+
+
+def format(values):
+    import string
+    t = string.Template("""
+    id      : $id
+    from    : $frm
+    to      : $to
+    content : $content
+    date    : $date
+"""
+        )
+    return t.substitute(values)

@@ -61,7 +61,7 @@ class CommandHandler():
                 r = '  ' + r
             body.append(r)
         body = sorted(body, key = lambda k:k[1], reverse=True)
-        body.insert(0, 'Note:** yourself \t* online')
+        body.insert(0, 'Note : ** yourself \t* online')
         return self._send_cmd_result(stanza, '\n'.join(body))
 
     def trans(self, stanza, *args):

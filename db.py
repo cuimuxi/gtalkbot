@@ -265,7 +265,7 @@ def get_history(sef, frm = None, index = 1,  size = 10):
     
     basesql = 'select id, frmemail, toemail, content, date from history where '
 
-    if not frm:
+    if not frm or frm.stip() == 'all':
         sql = basesql + 'toemail=? or toemail=? ORDER BY id DESC limit ? offset ?'
         param = (sef, 'all', limit, skip)
     else:

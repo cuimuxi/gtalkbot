@@ -14,8 +14,9 @@ USER = 'pythonerclub@gmail.com'
 
 PASSWORD = 'print"helloworld"'
 
+DEBUG = False
+
 ###### 下面设置不生效 #################
-DEBUG = []
 
 PLUGINS = []
 

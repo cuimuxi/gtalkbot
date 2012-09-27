@@ -12,10 +12,7 @@ from pyxmpp.all import JID
 from pyxmpp.all import Presence
 from fanyi import trans
 from fanyi import isen
-
-
-DEBUG = True
-
+from settings import DEBUG
 
 
 

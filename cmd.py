@@ -54,7 +54,7 @@ class CommandHandler():
         return self._send_cmd_result(stanza,trans([x for x in args]))
 
     def msgto(self, stanza, *args):
-        """单独给某用户发消息 eg $msgto nick hello(给nick发送hello)"""
+        """单独给某用户发消息 eg $msgto nick hello(给nick发送hello) \n\t\t也可以使用@<nick> 消息"""
         if len(args) > 1:
             nick = args[0]
             receiver = get_member(nick = nick)
@@ -204,6 +204,9 @@ def send_all_msg(stanza, body):
         r = re.findall(r'@<(.*?)>', body)
         mem = [get_member(nick=n) for n in r if get_member(nick = n)]
         if mem:
+            if body.startswith('@'):
+                b = re.sub(r'^@<.*?>', '', body)
+                return send_to_msg(stanza, mem[0], b)
             b = '%s 提到了你说: %s' % (nick, body)
             ml = [send_to_msg(stanza, to, b) for to in mem]
             ms += ml

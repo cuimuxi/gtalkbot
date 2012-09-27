@@ -8,11 +8,11 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-ADMINS = ['coldnight.linux@gmail.com']
+ADMINS = ['eleven.i386@gmail.com']
 
-USER = 'pythonerclub@gmail.com'
+USER = 'botofeleven@gmail.com'
 
-PASSWORD = 'print"helloworld"'
+PASSWORD = 'yangpan220'
 
 ###### 下面设置不生效 #################
 DEBUG = []

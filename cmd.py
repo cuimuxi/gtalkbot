@@ -50,7 +50,7 @@ class CommandHandler():
         return self._send_cmd_result(stanza, '\n'.join(body))
         
     def trans(self, stanza, *args):
-        """英汉翻译"""
+        """英汉翻译 e.g $trans en zh-CN hello/$trans zh-Cn en 你好"""
         return self._send_cmd_result(stanza,trans([x for x in args]))
 
     def msgto(self, stanza, *args):
@@ -120,7 +120,8 @@ class CommandHandler():
 
     def version(self, stanza, *args):
         """显示版本信息"""
-        body = "Version 0.1\nAuthor:cold night(wh_linux@126.com)\n"
+        author = ['cold night(wh_linux@126.com)']
+        body = "Version 0.1\n Author \n %s\n" % '\n'.join(author)
         return self._send_cmd_result(stanza, body)
 
     @classmethod
@@ -199,6 +200,14 @@ def send_all_msg(stanza, body):
     body = "[%s] %s" % (nick, body)
     tos = get_members(email)
     ms = []
+    if '@' in body:
+        import re
+        r = re.findall(r'\s@.*?\s', body)
+        mem = [get_member(nick=n) for n in r]
+        if mem:
+            b = '%s 提到了你说: %' % (nick, body)
+            ml = [send_to_msg(stanza, to, b) for to in mem]
+            ms += ml
     for to in tos:
         m = send_msg(stanza, to, body)
         ms.append(m)
@@ -207,7 +216,7 @@ def send_all_msg(stanza, body):
 
 def send_to_msg(stanza, to, body):
     frm = stanza.get_from()
-    email = '%s@%s' % (frm.node, frm.domain) 
+    email = '%s@%s' % (frm.node, frm.domain)
     nick = get_nick(email)
     add_history(email, to, body)
     body = "[%s 悄悄对你说] %s" % (nick, body)

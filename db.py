@@ -123,6 +123,7 @@ def get_member(email = None, uid = None, nick = None):
     """
     提供email返回id
     提供uid返回email
+    提供nick返回email
     """
     cursor, conn = get_cursor()
     if uid:

@@ -183,7 +183,6 @@ def send_msg(stanza, to_email, body):
     return m
 
 def send_all_msg(stanza, body):
-    transbody = ""
     frm = stanza.get_from()
     email = '%s@%s' % (frm.node, frm.domain)
     nick = get_nick(email)

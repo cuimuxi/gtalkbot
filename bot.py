@@ -145,15 +145,15 @@ class VersionHandler(object):
     def get_version(self,iq):
         iq=iq.make_result_response()
         q=iq.new_query("jabber:iq:version")
-        q.newTextChild(q.ns(),"name","Echo component")
-        q.newTextChild(q.ns(),"version","1.0")
+        q.newTextChild(q.ns(),"name","Pythoner Club")
+        q.newTextChild(q.ns(),"version","0.2")
         return iq
 
 class Client(JabberClient):
 
     def __init__(self, jid, password):
         if not jid.resource:
-            jid=JID(jid.node, jid.domain, "bot")
+            jid=JID(jid.node, jid.domain, "Bot")
 
             tls_settings = TLSSettings(require = True, verify_peer = False)
 

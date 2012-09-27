@@ -197,7 +197,6 @@ def send_all_msg(stanza, body):
     email = '%s@%s' % (frm.node, frm.domain)
     nick = get_nick(email)
     add_history(email, 'all', body)
-    body = "[%s] %s" % (nick, body)
     tos = get_members(email)
     ms = []
     if '@' in body:
@@ -205,9 +204,10 @@ def send_all_msg(stanza, body):
         r = re.findall(r'@<(.*?)>', body)
         mem = [get_member(nick=n) for n in r if get_member(nick = n)]
         if mem:
-            b = '%s 提到了你说: %' % (nick, body)
+            b = '%s 提到了你说: %s' % (nick, body)
             ml = [send_to_msg(stanza, to, b) for to in mem]
             ms += ml
+    body = "[%s] %s" % (nick, body)
     for to in tos:
         m = send_msg(stanza, to, body)
         ms.append(m)

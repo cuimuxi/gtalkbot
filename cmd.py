@@ -187,7 +187,7 @@ class CommandHandler():
             nick = get_nick(email)
             typ = args[0]
             codes = _add_commends(args[1:], typ, nick)
-            codes = ' '.join(codes)
+            codes = ''.join(codes[0:2]) + ' '.join(codes[2:]) 
             poster = "Pythoner Club: %s" % nick
             r = paste_code(poster,typ, codes)
             m = send_all_msg(stanza, r)

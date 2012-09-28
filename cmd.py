@@ -10,7 +10,11 @@
 #   + 增加@功能
 #   + 增加@<>为首发私信
 #   + 增加查看命令历史
+#   + 增加贴代码
+#   + 命令增加缓存功能
 
+
+import re
 from db import get_members
 from db import get_nick, get_member
 from db import edit_member
@@ -23,22 +27,59 @@ from pyxmpp.all import Presence
 from fanyi import trans
 from fanyi import isen
 from settings import DEBUG
+from settings import __version__
 
 
 
 get_email = lambda frm:"%s@%s" % (frm.node, frm.domain)
 
 
-def http_helper(url, param):
+def http_helper(url, param = None, callback=None):
     import urllib, urllib2
-    data = urllib.urlencode(param)
-    req =urllib2.Request(url,data)
+    if param:
+        data = urllib.urlencode(param)
+        req =urllib2.Request(url,data)
+    else:
+        req = urllib2.Request(url)
     req.add_header("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:14.0) Gecko/20100101 Firefox/14.0.1")
-    fd = urllib2.urlopen(req)
-    result =  fd.read()
+    print dir(req)
+    print req.get_method()
+    res = urllib2.urlopen(req)
+    
+    if callback:
+        result = callback(res)
+    else:
+        result =  res.read()
     return result
 
 
+def _get_code_types():
+    """获取贴代码支持的类型"""
+    purl = "http://paste.ubuntu.org.cn/"
+    def handle(res):
+        r = re.compile(r'<option\s+value="(.*?)".*?>(.*?)</option>')
+        result = []
+        for line in res.readlines():
+            if '<option' in line:
+                t = {}
+                t['key'], t['value'] = r.findall(line)[0]
+                result.append(t)
+        return result
+    result = http_helper(purl, callback=handle)
+    import string
+    t = string.Template("""$key : $value  """)
+    r = [t.substitute(v) for v in result]
+    result = '\n'.join(r)
+    return result
+
+
+def paste_code(poster, typ, codes):
+    param = {'class':typ}
+    param.update(poster=poster, code2 = codes, paste="发送")
+    purl = "http://paste.ubuntu.org.cn/"
+    get_url = lambda res:res.url
+    return http_helper(purl, param, get_url)
+    
 
 class CommandHandler():
     """
@@ -49,6 +90,7 @@ class CommandHandler():
         需要参数自行从kargs里提取
         所有命令须返回Message/Presence的实例或实例列表
     """
+    _cache = {}
     def list(self, stanza, *args):
         """列出所有成员"""
         frm = stanza.get_from()
@@ -101,12 +143,42 @@ class CommandHandler():
                 body = "%s 更改昵称为 %s" % (oldnick, nick)
                 m = send_all_msg(stanza, body)
             else:
-                m = self.send_cmd_result(stanza, '昵称已存在')
+                m = self._send_cmd_result(stanza, '昵称已存在')
         else:
             m = self.help(stanza, 'nick')
 
 
         return m
+
+
+    def code(self, stanza, *args):
+        """<type> <code> 贴代码,可以使用$codetype查看允许的代码类型"""
+        if len(args) > 1:
+            email = get_email(stanza.get_from())
+            nick = get_nick(email)
+            typ = args[0]
+            codes = ' '.join(args[1:])
+            poster = "Pythoner Club: %s" % nick
+            r = paste_code(poster,typ, codes)
+            m = send_all_msg(stanza, r)
+            mc = self._send_cmd_result(stanza, r)
+            m.append(mc)
+        else:
+            m = self.help(stanza, 'code')
+        return m
+            
+
+
+    
+    def codetypes(self, stanza, *args):
+        """返回有效的贴代码的类型"""
+        if self._cache.get('typs'):
+            body = self._cache.get('typs')
+        else:
+            body = _get_code_types()
+            self._cache.update(typs = body)
+        return self._send_cmd_result(stanza, body)
+        
 
     def invite(self, stanza, *args):
         """邀请好友加入 eg. $invite <yourfirendemail>"""
@@ -158,7 +230,7 @@ class CommandHandler():
                     'cold night(wh_linux@126.com)',
                     'eleven.i386(eleven.i386@gmail.com)',
                  ]
-        body = "Version 0.2\nAuthors\n\t%s\n" % '\n\t'.join(author)
+        body = "Version %s\nAuthors\n\t%s\n" % (__version__, '\n\t'.join(author))
         return self._send_cmd_result(stanza, body)
 
     

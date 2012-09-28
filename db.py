@@ -126,7 +126,6 @@ def change_status(frm, status, statustext):
         sql = 'update status set status=?,statustext=? where email=? and resource=?'
     else:
         sql = 'insert into status(status, statustext,email, resource) VALUES(?,?,?,?)'
-    print type(status)
     param = (status, statustext, email, resource)
     cursor, conn = get_cursor()
     cursor.execute(sql, param)

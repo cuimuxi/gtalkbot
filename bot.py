@@ -13,6 +13,8 @@ from pyxmpp.streamtls import TLSSettings
 from settings import USER, PASSWORD
 from cmd import send_all_msg, send_command
 from db import add_member, del_member, change_status
+from settings import __version__
+from settings import DEBUG
 
 
 
@@ -62,8 +64,8 @@ class BotHandler(object):
             m = send_command(stanza, body)
         else:
             m = send_all_msg(stanza, body)
-        print 'messge',m
-        print 'message dir', dir(m)
+        if not DEBUG:return m
+        print 'message',m
         if isinstance(m, list):
             for i in m:
                 print 'message to', i.get_to()
@@ -146,7 +148,7 @@ class VersionHandler(object):
         iq=iq.make_result_response()
         q=iq.new_query("jabber:iq:version")
         q.newTextChild(q.ns(),"name","Pythoner Club")
-        q.newTextChild(q.ns(),"version","0.2")
+        q.newTextChild(q.ns(),"version",__version__)
         return iq
 
 class Client(JabberClient):

@@ -16,6 +16,8 @@ PASSWORD = 'print"helloworld"'
 
 DEBUG = False
 
+__version__  = '0.3'
+
 ###### 下面设置不生效 #################
 
 PLUGINS = []

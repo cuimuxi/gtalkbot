@@ -103,16 +103,16 @@ def _add_commends(codes, typ, nick):
         symbol = commends.get(typ, '# ')
         if isinstance(symbol, list):
             c = "%s\n%s 由Pythoner Club 的 %s 提交\n 欢迎加入我们讨论技术: \
-                \n\t使用gtalk添加%s %s" % (codes[0],symbol[0], nick, USER, symbol[1])
+                \n\t使用gtalk添加%s %s\n" % (codes[0],symbol[0], nick, USER, symbol[1])
         else:
             c = "%s\n%s 由Pythoner Club 的 %s 提交\n%s 欢迎加入我们讨论技术: \
-                \n%s\t使用gtalk添加%s" % (codes[0],symbol, nick, symbol, symbol, USER)
+                \n%s\t使用gtalk添加%s\n" % (codes[0],symbol, nick, symbol, symbol, USER)
         codes[0] = c
     else:
         symbol = commends.get(typ, '// ')
         if isinstance(symbol, list):
             c = "%s 由Pythoner Club 的 %s 提交\n 欢迎加入我们讨论技术: \
-                \n\t使用gtalk添加%s %s" % (symbol[0], nick, USER, symbol[1])
+                \n\t使用gtalk添加%s %s\n" % (symbol[0], nick, USER, symbol[1])
         else:
             c = "%s 由Pythoner Club 的 %s 提交\n%s 欢迎加入我们讨论技术: \
                 \n%s\t使用gtalk添加%s\n" % (symbol, nick, symbol, symbol, USER)

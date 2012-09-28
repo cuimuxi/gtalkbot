@@ -28,6 +28,7 @@ from fanyi import trans
 from fanyi import isen
 from settings import DEBUG
 from settings import __version__
+from settings import USER
 
 
 
@@ -42,8 +43,6 @@ def http_helper(url, param = None, callback=None):
     else:
         req = urllib2.Request(url)
     req.add_header("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:14.0) Gecko/20100101 Firefox/14.0.1")
-    print dir(req)
-    print req.get_method()
     res = urllib2.urlopen(req)
     
     if callback:
@@ -77,9 +76,39 @@ def paste_code(poster, typ, codes):
     param = {'class':typ}
     param.update(poster=poster, code2 = codes, paste="发送")
     purl = "http://paste.ubuntu.org.cn/"
+
     get_url = lambda res:res.url
     return http_helper(purl, param, get_url)
-    
+
+
+def _add_commends(codes, typ, nick):
+    commends = {"actionscript": "// ", "actionscript-french" : "// ",
+                "ada" : "-- ","apache" : "# ","applescript" : "- ",
+                "asm" : "; ","asp" : "// ",  "autoit" : "; ","bash" : "# ",
+                "blitzbasic" : "' ","c ":"// ","c_mac" : "// ",
+                "cpp" :" // ","csharp" : "// ","css" : ["/* ", " */"],
+                "freebasic" : "' ","html4strict" : ["<!-- ", " -->"],
+                "java" : "//  ","java5" : "//  ","javascript" : "//  ",
+                "lisp" : ";; ","lua" : "--  ","mysql" : "--  ",
+                "objc" : "// ","perl" : "# ","php" : "// ",
+                "php-brief" : "//  ","python" : "# ","qbasic" : "' ",
+                "robots" : "# ","ruby" : "#","sql" : "--  ",
+                "tsql" : "-- ","vb" : "'  ","vbnet" : "//  "}
+    codes  = list(codes)
+    if codes[0].startswith('#!'):
+        symbol = commends.get(typ, '# ')
+        c = "%s 由Pythoner Club 的 %s 提交\n%s 欢迎加入我们讨论技术: \
+            \n%s\t使用gtalk添加%s" % (symbol, nick, symbol, symbol, USER) 
+        codes.insert(1, c)
+    else:
+        symbol = commends.get(typ, '// ')
+        c = "%s 由Pythoner Club 的 %s 提交\n%s 欢迎加入我们讨论技术: \
+            \n%s\t使用gtalk添加%s\n" % (symbol, nick, symbol, symbol, USER) 
+        codes.insert(0, c)
+
+    return codes
+
+
 
 class CommandHandler():
     """
@@ -157,7 +186,8 @@ class CommandHandler():
             email = get_email(stanza.get_from())
             nick = get_nick(email)
             typ = args[0]
-            codes = ' '.join(args[1:])
+            codes = _add_commends(args[1:], typ, nick)
+            codes = ' '.join(codes)
             poster = "Pythoner Club: %s" % nick
             r = paste_code(poster,typ, codes)
             m = send_all_msg(stanza, r)
@@ -166,10 +196,10 @@ class CommandHandler():
         else:
             m = self.help(stanza, 'code')
         return m
-            
 
 
-    
+
+
     def codetypes(self, stanza, *args):
         """返回有效的贴代码的类型"""
         if self._cache.get('typs'):
@@ -178,7 +208,7 @@ class CommandHandler():
             body = _get_code_types()
             self._cache.update(typs = body)
         return self._send_cmd_result(stanza, body)
-        
+
 
     def invite(self, stanza, *args):
         """邀请好友加入 eg. $invite <yourfirendemail>"""
@@ -261,11 +291,23 @@ class CommandHandler():
         """获取命令"""
         args = []
         c = ''
-        for i, v in enumerate(cmd.split(' ')):
+        splitbody = cmd.split('\n')
+        if len(splitbody) >= 2:
+            cmdline = splitbody[0]
+            body = '\n'.join(splitbody[1:])
+        else:
+            if len(splitbody) == 1:
+                cmdline = splitbody[0]
+                body = None
+            else:
+                cmdline,body = splitbody
+
+        for i, v in enumerate(cmdline.split(' ')):
             if i == 0:
                 c = v
             else:
                 args.append(v)
+        if body:args.append(body)
         if DEBUG:
             m = cls.__dict__.get(c)(cls, stanza, *args)
         else:
@@ -310,7 +352,6 @@ def send_all_msg(stanza, body):
     tos = get_members(email)
     ms = []
     if '@' in body:
-        import re
         r = re.findall(r'@<(.*?)>', body)
         mem = [get_member(nick=n) for n in r if get_member(nick = n)]
         if mem:

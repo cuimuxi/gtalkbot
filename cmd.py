@@ -78,7 +78,11 @@ def paste_code(poster, typ, codes):
     purl = "http://paste.ubuntu.org.cn/"
 
     get_url = lambda res:res.url
-    return http_helper(purl, param, get_url)
+    url = http_helper(purl, param, get_url)
+    if url == purl:
+        return False
+    else:
+        return url
 
 
 def _add_commends(codes, typ, nick):
@@ -93,7 +97,7 @@ def _add_commends(codes, typ, nick):
                 "objc" : "// ","perl" : "# ","php" : "// ",
                 "php-brief" : "//  ","python" : "# ","qbasic" : "' ",
                 "robots" : "# ","ruby" : "#","sql" : "--  ",
-                "tsql" : "-- ","vb" : "'  ","vbnet" : "//  "}
+                "tsql" : "-- ","vb" : "'  ","vbnet" : "//  ", "xml":["<!--", "-->"]}
     codes  = list(codes)
     if codes[0].startswith('#!'):
         symbol = commends.get(typ, '# ')
@@ -198,9 +202,12 @@ class CommandHandler():
             codes = ''.join(codes[0:2]) + ' '.join(codes[2:]) 
             poster = "Pythoner Club: %s" % nick
             r = paste_code(poster,typ, codes)
-            m = send_all_msg(stanza, r)
-            mc = self._send_cmd_result(stanza, r)
-            m.append(mc)
+            if r:
+                m = send_all_msg(stanza, r)
+                mc = self._send_cmd_result(stanza, r)
+                m.append(mc)
+            else:
+                m = self._send_cmd_result(stanza, 'something wrong')
         else:
             m = self.help(stanza, 'code')
         return m

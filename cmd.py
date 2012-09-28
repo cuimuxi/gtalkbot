@@ -24,8 +24,7 @@ from db import get_history
 from pyxmpp.all import Message
 from pyxmpp.all import JID
 from pyxmpp.all import Presence
-from fanyi import trans
-from fanyi import isen
+from fanyi import Complex
 from settings import DEBUG
 from settings import __version__
 from settings import USER
@@ -154,7 +153,13 @@ class CommandHandler():
 
     def trans(self, stanza, *args):
         """中日英翻译,默认英-汉翻译,eg $trans zh-en 中文,$trans ja-zh 死ぬ行く"""
-        return self._send_cmd_result(stanza,trans([x for x in args]))
+        trans = Complex()
+        return self._send_cmd_result(stanza, trans.trans([x for x in args]))
+
+    def tq(self, stanza, *args):
+        """指定城市获取天气, eg. $tq 广州"""
+        tq = Complex()
+        return self._send_cmd_result(stanza, tq.tq(''.join([x for x in args])))
 
     def msgto(self, stanza, *args):
         """单独给某用户发消息 eg $msgto nick hello(给nick发送hello) 也可以使用@<nick> 消息"""

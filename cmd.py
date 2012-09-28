@@ -101,7 +101,7 @@ class CommandHandler():
                 body = "%s 更改昵称为 %s" % (oldnick, nick)
                 m = send_all_msg(stanza, body)
             else:
-                m = _send_cmd_result(stanza, '昵称已存在')
+                m = self.send_cmd_result(stanza, '昵称已存在')
         else:
             m = self.help(stanza, 'nick')
 

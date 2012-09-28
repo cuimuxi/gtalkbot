@@ -70,7 +70,7 @@ class CommandHandler():
         return self._send_cmd_result(stanza, '\n'.join(body))
 
     def trans(self, stanza, *args):
-        """英汉翻译"""
+        """中日英翻译,默认英-汉翻译,eg $trans zh-en 中文,$trans ja-zh 死ぬ行く"""
         return self._send_cmd_result(stanza,trans([x for x in args]))
 
     def msgto(self, stanza, *args):

@@ -41,7 +41,7 @@ class Complex():
         wordkey = key
         result = urllib.urlopen(url+cityid(wordkey)+'.html')
         load = json.loads(result.read())
-        return 'city:%s, Weather %s, hight %s, low %s' %(load['weatherinfo']['city'],load['weatherinfo']['weather'],load['weatherinfo']['temp1'],load['weatherinfo']['temp2'])
+        return 'city:%s, Weather %s, %s ~ %s' %(load['weatherinfo']['city'],load['weatherinfo']['weather'],load['weatherinfo']['temp1'],load['weatherinfo']['temp2'])
         
 
     def isen(slef,x):

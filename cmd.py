@@ -56,7 +56,7 @@ def http_helper(url, param = None, callback=None):
 
 def _get_code_types():
     """获取贴代码支持的类型"""
-    purl = "http://paste.ubuntu.org.cn/"
+    purl = "http://paste.linuxzen.com/"
     def handle(res):
         r = re.compile(r'<option\s+value="(.*?)".*?>(.*?)</option>')
         result = []
@@ -77,7 +77,7 @@ def _get_code_types():
 def paste_code(poster, typ, codes):
     param = {'class':typ}
     param.update(poster=poster, code2 = codes, paste="发送")
-    purl = "http://paste.ubuntu.org.cn/"
+    purl = "http://paste.linuxzen.com/"
 
     get_url = lambda res:res.url
     url = http_helper(purl, param, get_url)

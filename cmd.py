@@ -99,7 +99,9 @@ def _add_commends(codes, typ, nick):
                 "objc" : "// ","perl" : "# ","php" : "// ",
                 "php-brief" : "//  ","python" : "# ","qbasic" : "' ",
                 "robots" : "# ","ruby" : "#","sql" : "--  ",
-                "tsql" : "-- ","vb" : "'  ","vbnet" : "//  ", "xml":["<!--", "-->"]}
+                "tsql" : "-- ","vb" : "'  ","vbnet" : "//  ", "xml":["<!--", "-->"],
+                "vim":'"'
+               }
     codes  = list(codes)
     if codes[0].startswith('#!'):
         symbol = commends.get(typ, '# ')

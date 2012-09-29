@@ -12,9 +12,12 @@
 #   + 增加查看命令历史
 #   + 增加贴代码
 #   + 命令增加缓存功能
+# 2012-09-28 08:52
+#   + 命令生成增加缓存操作
 
 
 import re
+import time
 from db import get_members
 from db import get_nick, get_member
 from db import edit_member
@@ -199,7 +202,7 @@ class CommandHandler():
             nick = get_nick(email)
             typ = args[0]
             codes = _add_commends(args[1:], typ, nick)
-            codes = ''.join(codes[0:2]) + ' '.join(codes[2:]) 
+            codes = ''.join(codes[0:2]) + ' '.join(codes[2:])
             poster = "Pythoner Club: %s" % nick
             r = paste_code(poster,typ, codes)
             if r:
@@ -232,11 +235,9 @@ class CommandHandler():
             p1 = Presence(from_jid = stanza.get_to(),
                          to_jid = JID(to),
                          stanza_type = 'subscribe')
-            #stanza.stream.send(p)
             p = Presence(from_jid = stanza.get_to(),
                          to_jid = JID(to),
                          stanza_type = 'subscribed')
-            #m = stanza.stream.send(p)
             return [p,p1]
         else:
             return self.help(stanza, 'invite')
@@ -267,8 +268,8 @@ class CommandHandler():
             return self._send_cmd_result(stanza, get_history(email, *args))
         else:
             return self._send_cmd_result(stanza, get_history(email))
-    
-    
+
+
     def version(self, stanza, *args):
         """显示版本信息"""
         author = [
@@ -278,7 +279,34 @@ class CommandHandler():
         body = "Version %s\nAuthors\n\t%s\n" % (__version__, '\n\t'.join(author))
         return self._send_cmd_result(stanza, body)
 
-    
+
+    def _set_cache(self, key, data, expires = None):
+        """设置缓存 expires(秒) 设置过期时间None为永不过期"""
+        if expires:
+            self._cache[key] = {}
+            self._cache[key]['data'] = data
+            self._cache[key]['expires'] = expires
+            self._cache[key]['time'] = time.time()
+        else:
+            self._cache[key]['data'] = data
+
+
+
+    def _get_cache(self, key):
+        """获取缓存"""
+        if not self._cache.has_key(key): return None
+        if self._cache[key].has_key('expires'):
+            expires = self._cache[key]['expires']
+            time = self._cache[key]['time']
+            if (time.time() - time) > expires:
+                return None
+            else:
+                return self._cache[key].get('data')
+        else:
+            return self._cache[key].get('data')
+
+
+
     @classmethod
     def _send_cmd_result(cls, stanza, body):
         """返回命令结果"""

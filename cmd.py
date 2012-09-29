@@ -76,7 +76,7 @@ def _get_code_types():
 
 def paste_code(poster, typ, codes):
     param = {'class':typ}
-    param.update(poster=poster, code2 = codes, paste="发送")
+    param.update(poster=poster, code = codes, paste="发送")
     purl = "http://paste.linuxzen.com/"
 
     get_url = lambda res:res.url

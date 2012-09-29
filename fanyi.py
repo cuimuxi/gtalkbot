@@ -14,7 +14,7 @@ class Complex():
 
             """ a == src language; b == dst language; c == content """ 
             c = c.encode('utf-8')
-            transurl = 'http://translate.google.cn/translate_a/t?client=t&text=' 
+            transurl = 'http://translate.google.com.hk/translate_a/t?client=t&text=' 
             UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Ubuntu/11.10 Chromium/17.0.963.79 Chrome/17.0.963.79 Safari/535.11'
             r = urllib2.Request(transurl+urllib2.quote(c)+'&hl=zh-CN&sl='+a+'&tl='+b+'&multires=1&prev=btn&ssel=5&tsel=5&sc=1')
             r.add_header('User-Agent',UA)

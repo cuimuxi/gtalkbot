@@ -14,6 +14,9 @@
 #   + 命令增加缓存功能
 # 2012-09-28 08:52
 #   + 命令生成增加缓存操作
+# 2012-10-08 14:16
+#   * 修改运行命令方式,方便继承
+#   + 添加管理员命令
 
 
 import re
@@ -24,14 +27,15 @@ from db import edit_member
 from db import add_history
 from db import is_online
 from db import get_history
+from db import logger
 from pyxmpp.all import Message
 from pyxmpp.all import JID
 from pyxmpp.all import Presence
 from fanyi import Complex
-from settings import DEBUG
 from settings import __version__
 from settings import USER
-from db import logger
+from settings import LOGPATH
+from settings import ADMINS
 
 
 
@@ -127,7 +131,7 @@ def _add_commends(codes, typ, nick):
 
 
 
-class CommandHandler():
+class CommandHandler(object):
     """
         生成命令
         命令对应着方法
@@ -204,7 +208,7 @@ class CommandHandler():
 
 
     def code(self, stanza, *args):
-        """<type> <code> 贴代码,可以使用$codetype查看允许的代码类型"""
+        """<type> <code> 贴代码,可以使用$codetypes查看允许的代码类型"""
         if len(args) > 1:
             email = get_email(stanza.get_from())
             nick = get_nick(email)
@@ -321,25 +325,22 @@ class CommandHandler():
         frm = stanza.get_from()
         email = '%s@%s' % (frm.node, frm.domain)
         message = send_msg(stanza, email, body)
-        #stanza.stream.send(message)
         return message
 
 
-    @classmethod
-    def _get_cmd(cls, name = None):
+    def _get_cmd(self, name = None):
         if name:
-            return cls.__dict__.get(name)
+            r = getattr(self, name)
         else:
-            r = [{'name':k, 'func':v} for k, v in cls.__dict__.items() if not k.startswith('_')]
-            return r
+            r = [{'name':k, 'func':getattr(self, k)} for k in dir(self) if not k.startswith('_')]
+        return r
 
 
     def __getattr__(self, name):
         return self.help
 
-    @classmethod
-    def _run_cmd(cls,cmd, stanza):
-        """获取命令"""
+
+    def _parse_args(self, cmd):
         args = []
         c = ''
         splitbody = cmd.split('\n')
@@ -359,14 +360,19 @@ class CommandHandler():
             else:
                 args.append(v)
         if body:args.append(body)
-        if DEBUG:
-            m = cls.__dict__.get(c)(cls, stanza, *args)
-        else:
-            try:
-                m = cls.__dict__.get(c)(cls, stanza, *args)
-            except Exception as e:
-                logger.warning('Error %s', e.message)
-                m = cls.__dict__.get('help')(cls, stanza, c)
+        return c, args
+
+    def _run_cmd(self, stanza, cmd):
+        """获取命令"""
+        c, args = self._parse_args(cmd)
+        email = get_email(stanza.get_from())
+        try:
+            logger.info('%s run cmd %s', email, c)
+            logger.info(getattr(self, '__dict__'))
+            m =getattr(self, c)(stanza, *args)
+        except Exception as e:
+            logger.warning('Error %s', e.message)
+            m = self._send_cmd_result(stanza, 'error')
 
         return m
 
@@ -375,24 +381,39 @@ class AdminCMDHandle(CommandHandler):
     """管理员命令"""
     def log(self, stanza, *args):
         """查看日志"""
+        lf = open(LOGPATH)
+        lines = lf.readlines()
+        if len(lines) > 10:
+            body = '\n'.join(lines[-10:])
+        else:
+            body = '\n'.join(lines)
 
-run_cmd = CommandHandler._run_cmd
+        return self._send_cmd_result(stanza, body)
+
+
+
+run_cmd = CommandHandler()._run_cmd
+
+admin_run_cmd = AdminCMDHandle()._run_cmd
+#admin_run_cmd = run_cmd
 
 
 
 def send_command(stanza, body):
     cmd = body[1:]
-    m = run_cmd(cmd, stanza)
+    email = get_email(stanza.get_from())
+    if email in ADMINS:
+        m = admin_run_cmd(stanza, cmd)
+    else:
+        m = run_cmd(stanza, cmd)
     return m
 
 
 def send_msg(stanza, to_email, body):
     m=Message(
         to_jid=JID(to_email),
-        #from_jid=stanza.get_to(),
         stanza_type=stanza.get_type(),
         body=body)
-    #stanza.stream.send(m)
     return m
 
 def send_all_msg(stanza, body):
@@ -413,7 +434,7 @@ def send_all_msg(stanza, body):
             ml = [send_to_msg(stanza, to, b) for to in mem]
             ms += ml
     elif body.strip() == 'help':
-        return run_cmd('help', stanza)
+        return send_command(stanza, '$help')
     body = "[%s] %s" % (nick, body)
     for to in tos:
         m = send_msg(stanza, to, body)

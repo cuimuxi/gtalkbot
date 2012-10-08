@@ -7,12 +7,13 @@
 # 2012-09-27 13:00
 #   + 增加一张表,为status表
 #   + 增加对状态操作的函数
+# 2012-10-8  09:57
+#   + 增加日志
 
 import os
 import logging
 import sqlite3
 from datetime import datetime
-from xmpp import JID
 from settings import DEBUG
 from settings import LOGPATH
 

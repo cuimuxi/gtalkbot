@@ -64,16 +64,16 @@ class BotHandler(object):
         else:
             m = send_all_msg(stanza, body)
         if not DEBUG:return m
-        logger.debug('message %s', m)
+        logger.info('message %s', m)
         if isinstance(m, list):
             for i in m:
-                logger.debug('message to %s', i.get_to())
-                logger.debug('message type %s', i.get_type())
-                logger.debug('message body %s', i.get_body())
+                logger.info('message to %s', i.get_to())
+                logger.info('message type %s', i.get_type())
+                logger.info('message body %s', i.get_body())
         else:
-            logger.debug('message to %s', m.get_to())
-            logger.debug('message body %s', m.get_body())
-            logger.debug('message type %s', m.get_type())
+            logger.info('message to %s', m.get_to())
+            logger.info('message body %s', m.get_body())
+            logger.info('message type %s', m.get_type())
 
 
         return m
@@ -207,14 +207,15 @@ logger.info(u"connecting...")
 c.connect()
 
 logger.info(u"looping...")
+c.loop(None)
 try:
     # Component class provides basic "main loop" for the applitation
     # Though, most applications would need to have their own loop and call
     # component.stream.loop_iter() from it whenever an event on
     # component.stream.fileno() occurs.
-    c.loop(None)
+    pass
 except KeyboardInterrupt:
     logger.info(u"disconnecting...")
-    c.disconnect()
+    #c.disconnect()
 
 logger.info(u"exiting...")

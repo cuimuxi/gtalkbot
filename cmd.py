@@ -116,7 +116,7 @@ def _add_commends(codes, typ, nick):
         else:
             c = "%s\n%s 由Pythoner Club 的 %s 提交\n%s 欢迎加入我们讨论技术: \
                 \n%s\t使用gtalk添加%s\n" % (codes[0],symbol, nick, symbol, symbol, USER)
-        codes[0] = c
+        codes.insert(1, c)
     else:
         symbol = commends.get(typ, '// ')
         if isinstance(symbol, list):

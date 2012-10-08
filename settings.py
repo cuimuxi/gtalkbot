@@ -18,11 +18,13 @@ DEBUG = False
 
 __version__  = '0.3'
 
+
+LOGPATH = 'group.log'
+
 ###### 下面设置不生效 #################
 
 PLUGINS = []
 
-LOGPATH = 'group.log'
 
 # DEBUG:10
 # INFO : 20

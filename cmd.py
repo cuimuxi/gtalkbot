@@ -108,24 +108,15 @@ def _add_commends(codes, typ, nick):
                 "vim":'"'
                }
     codes  = list(codes)
-    if codes[0].startswith('#!'):
-        symbol = commends.get(typ, '# ')
-        if isinstance(symbol, list):
-            c = "%s\n%s 由Pythoner Club 的 %s 提交\n 欢迎加入我们讨论技术: \
-                \n\t使用gtalk添加%s %s\n" % (codes[0],symbol[0], nick, USER, symbol[1])
-        else:
-            c = "%s\n%s 由Pythoner Club 的 %s 提交\n%s 欢迎加入我们讨论技术: \
-                \n%s\t使用gtalk添加%s\n" % (codes[0],symbol, nick, symbol, symbol, USER)
-        codes.insert(1, c)
+    symbol = commends.get(typ, '// ')
+    if isinstance(symbol, list):
+        c = "%s 由Pythoner Club 的 %s 提交\n 欢迎加入我们讨论技术: \
+            \n\t使用gtalk添加%s %s\n" % (symbol[0], nick, USER, symbol[1])
     else:
-        symbol = commends.get(typ, '// ')
-        if isinstance(symbol, list):
-            c = "%s 由Pythoner Club 的 %s 提交\n 欢迎加入我们讨论技术: \
-                \n\t使用gtalk添加%s %s\n" % (symbol[0], nick, USER, symbol[1])
-        else:
-            c = "%s 由Pythoner Club 的 %s 提交\n%s 欢迎加入我们讨论技术: \
-                \n%s\t使用gtalk添加%s\n" % (symbol, nick, symbol, symbol, USER)
-        codes.insert(0, c)
+        c = "%s 由Pythoner Club 的 %s 提交\n%s 欢迎加入我们讨论技术: \
+            \n%s\t使用gtalk添加%s\n" % (symbol, nick, symbol, symbol, USER)
+    c += "#\n#\n####### Code Start #####################\n"
+    codes.insert(0, c)
 
     return codes
 

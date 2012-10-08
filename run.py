@@ -80,9 +80,9 @@ except OSError, e:
 
 while 1:
     info = {}
-    c=Client(JID('cnpytoner@gmail.com/daemon'), 'daemonis$ESZ')
-    c.connect()
     try:
+        c=Client(JID('cnpytoner@gmail.com/daemon'), 'daemonis$ESZ')
+        c.connect()
         c.loop(1)
     except KeyboardInterrupt:
         c.disconnect()
@@ -92,4 +92,5 @@ while 1:
         time.sleep(10)
     else:
         subprocess.Popen("kill `ps aux | grep 'python bot.py' | grep -v 'grep'| awk '{print $2}'`", stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE, shell = True)
+        print 'started'
         subprocess.Popen("python bot.py", stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE, shell=True)

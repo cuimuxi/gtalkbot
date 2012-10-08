@@ -9,9 +9,26 @@
 #   + 增加对状态操作的函数
 
 import os
+import logging
 import sqlite3
 from datetime import datetime
 from xmpp import JID
+from settings import DEBUG
+from settings import LOGPATH
+
+
+logger = logging.getLogger()
+if DEBUG:
+    hdl = logging.StreamHandler()
+else:
+    hdl = logging.FileHandler(LOGPATH)
+fmt = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+hdl.setFormatter(fmt)
+logger.addHandler(hdl)
+logger.setLevel(logging.INFO) # change to DEBUG for higher verbosity
+
+
+
 
 DB_NAME="group.db"
 
@@ -29,9 +46,9 @@ def _init_table():
         创建成员数据库 members
         key       type         default
         id     INTEGER PRIMARY KEY AUTO_INCREMENT  null
-        email  VARCHAR          null       
+        email  VARCHAR          null
         name   VARCHAR          null
-        nick   VARCHAR          null 
+        nick   VARCHAR          null
         last   timestamp         // 最后发言
         lastchange timestamp     // 最后修改
         isonline   INT           // 是否在线(0否, 1 是)
@@ -261,7 +278,7 @@ def get_history(sef, frm = None, index = 1,  size = 10):
     cursor, conn = get_cursor()
     limit = int(size)
     skip = (int(index) -1) * 10
-    
+
     basesql = 'select id, frmemail, toemail, content, date from history where '
 
     if not frm or frm.strip() == 'all':

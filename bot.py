@@ -2,7 +2,6 @@
 #-*- coding:utf-8 -*-
 
 import sys
-import logging
 import codecs
 
 from pyxmpp.all import JID,Iq,Presence,Message,StreamError
@@ -13,9 +12,9 @@ from pyxmpp.streamtls import TLSSettings
 from settings import USER, PASSWORD
 from cmd import send_all_msg, send_command
 from db import add_member, del_member, change_status
+from db import logger
 from settings import __version__
 from settings import DEBUG
-
 
 
 class BotHandler(object):
@@ -45,36 +44,36 @@ class BotHandler(object):
         body=stanza.get_body()
         subject=stanza.get_subject()
         t=stanza.get_type()
-        print u'Message from %s received.' % (unicode(stanza.get_from(),)),
+        logger.info(u'Message from %s received.' % (unicode(stanza.get_from(),)),)
         if subject:
-            print u'Subject: "%s".' % (subject,),
+            logger.info(u'Subject: "%s".' % (subject,),)
         if t:
-            print u'Type: "%s".' % (t,)
+            logger.info(u'Type: "%s".' % (t,))
         else:
-            print u'Type: "normal".'
+            logger.info(u'Type: "normal".')
         if stanza.get_type()=="headline":
             # 'headline' messages should never be replied to
             return True
         if subject:
             subject=u"Re: "+subject
         if not body:
-            print u'Body: "%s".' % (body,),
+            logger.info(u'Body: "%s".' % (body,),)
             return
         if body.startswith('$'):
             m = send_command(stanza, body)
         else:
             m = send_all_msg(stanza, body)
         if not DEBUG:return m
-        print 'message',m
+        logger.debug('message %s', m)
         if isinstance(m, list):
             for i in m:
-                print 'message to', i.get_to()
-                print 'message type', i.get_type()
-                print 'message body', i.get_body()
+                logger.debug('message to %s', i.get_to())
+                logger.debug('message type %s', i.get_type())
+                logger.debug('message body %s', i.get_body())
         else:
-            print 'message to', m.get_to()
-            print 'message body', m.get_body()
-            print 'message type', m.get_type()
+            logger.debug('message to %s', m.get_to())
+            logger.debug('message body %s', m.get_body())
+            logger.debug('message type %s', m.get_type())
 
 
         return m
@@ -98,7 +97,7 @@ class BotHandler(object):
 
         if status:
             msg+=u": "+status
-        print msg
+        logger.info(msg)
 
     def presence_control(self,stanza):
         msg=unicode(stanza.get_from())
@@ -107,7 +106,7 @@ class BotHandler(object):
         if t=="subscribe":
             msg+=u" has requested presence subscription."
             body = "%s 加入群" % frm.node
-            send_all_msg(stanza, body)  
+            send_all_msg(stanza, body)
             add_member(frm)
         elif t=="subscribed":
             msg+=u" has accepted our presence subscription request."
@@ -121,7 +120,7 @@ class BotHandler(object):
             msg+=u" has canceled our subscription of his presence."
             del_member(frm)
 
-        print msg
+        logger.info(msg)
 
         return stanza.make_accept_response()
 
@@ -173,7 +172,7 @@ class Client(JabberClient):
         p = Presence(status = "Pythoner Club, Python/Linux/Vim 技术交流")
         self.stream.send(p)
     def stream_state_changed(self,state,arg):
-        print "*** State changed: %s %r ***" % (state,arg)
+        logger.info("*** State changed: %s %r ***" % (state,arg))
 
     def print_roster_item(self,item):
         if item.name:
@@ -198,19 +197,16 @@ sys.stdout = codecs.getwriter(encoding)(sys.stdout, errors = "replace")
 sys.stderr = codecs.getwriter(encoding)(sys.stderr, errors = "replace")
 
 
-logger = logging.getLogger()
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.INFO) # change to DEBUG for higher verbosity
 
-
-print u"creating client..."
+logger.info(u"creating client...")
 
 c=Client(JID(USER), PASSWORD)
 
-print u"connecting..."
+
+logger.info(u"connecting...")
 c.connect()
 
-print u"looping..."
+logger.info(u"looping...")
 try:
     # Component class provides basic "main loop" for the applitation
     # Though, most applications would need to have their own loop and call
@@ -218,8 +214,7 @@ try:
     # component.stream.fileno() occurs.
     c.loop(None)
 except KeyboardInterrupt:
-    print u"disconnecting..."
+    logger.info(u"disconnecting...")
     c.disconnect()
 
-print u"exiting..."
-
+logger.info(u"exiting...")

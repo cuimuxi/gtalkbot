@@ -31,6 +31,7 @@ from fanyi import Complex
 from settings import DEBUG
 from settings import __version__
 from settings import USER
+from db import logger
 
 
 
@@ -46,7 +47,7 @@ def http_helper(url, param = None, callback=None):
         req = urllib2.Request(url)
     req.add_header("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:14.0) Gecko/20100101 Firefox/14.0.1")
     res = urllib2.urlopen(req)
-    
+
     if callback:
         result = callback(res)
     else:
@@ -364,7 +365,7 @@ class CommandHandler():
             try:
                 m = cls.__dict__.get(c)(cls, stanza, *args)
             except Exception as e:
-                print 'Error', e.message
+                logger.warning('Error %s', e.message)
                 m = cls.__dict__.get('help')(cls, stanza, c)
 
         return m

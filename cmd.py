@@ -368,7 +368,6 @@ class CommandHandler(object):
         email = get_email(stanza.get_from())
         try:
             logger.info('%s run cmd %s', email, c)
-            logger.info(getattr(self, '__dict__'))
             m =getattr(self, c)(stanza, *args)
         except Exception as e:
             logger.warning('Error %s', e.message)
@@ -380,15 +379,29 @@ class CommandHandler(object):
 class AdminCMDHandle(CommandHandler):
     """管理员命令"""
     def log(self, stanza, *args):
-        """查看日志"""
+        """查看日志($log <page> <size>)"""
         lf = open(LOGPATH)
         lines = lf.readlines()
-        if len(lines) > 10:
-            body = '\n'.join(lines[-10:])
+        lines.append('\ntotal lines: %d' % len(lines))
+        if len(args) == 2:
+            start = int(args[0]) * int(args[1])
+            end = start + int(args[1])
+        elif len(args) == 1:
+            start = int(args[0]) * 10
+            end = start + 10
         else:
-            body = '\n'.join(lines)
+            start = 1
+            end = 10
+        if len(lines) > 10:
+            body = ''.join(lines[-end:-start])
+        else:
+            body = ''.join(lines)
 
         return self._send_cmd_result(stanza, body)
+
+
+    def rm(self, stanza, *args):
+        """剔除用户"""
 
 
 

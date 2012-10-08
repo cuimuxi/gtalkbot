@@ -310,8 +310,7 @@ class CommandHandler(object):
 
 
 
-    @classmethod
-    def _send_cmd_result(cls, stanza, body):
+    def _send_cmd_result(self, stanza, body):
         """返回命令结果"""
         frm = stanza.get_from()
         email = '%s@%s' % (frm.node, frm.domain)
@@ -393,13 +392,12 @@ class AdminCMDHandle(CommandHandler):
 
     def rm(self, stanza, *args):
         """剔除用户"""
+        pass
 
 
 
 run_cmd = CommandHandler()._run_cmd
-
 admin_run_cmd = AdminCMDHandle()._run_cmd
-#admin_run_cmd = run_cmd
 
 
 

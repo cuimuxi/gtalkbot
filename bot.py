@@ -107,14 +107,17 @@ class BotHandler(object):
         frm = stanza.get_from()
         frm_email = '%s@%s' % (frm.node, frm.domain)
         if frm_email == DAEMONACCOUNT[0]:
-            return stanza.make_accept_response()
+            p = Presence(to_jid = frm, stanza_type='subscibe')
+            return stanza.make_accept_response(), p
         if t=="subscribe":
             msg+=u" has requested presence subscription."
             body = "%s 加入群" % frm.node
+            p = Presence(to_jid = frm, stanza_type='subscibe')
             send_all_msg(stanza, body)
             add_member(frm)
         elif t=="subscribed":
             msg+=u" has accepted our presence subscription request."
+            p = Presence(to_jid = frm, stanza_type='subscibe')
             add_member(frm)
         elif t=="unsubscribe":
             msg+=u" has canceled his subscription of our."
@@ -127,7 +130,7 @@ class BotHandler(object):
 
         logger.info(msg)
 
-        return stanza.make_accept_response()
+        return stanza.make_accept_response(),p
 
 
 class VersionHandler(object):

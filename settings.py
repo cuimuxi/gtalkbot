@@ -16,7 +16,7 @@ PASSWORD = 'print"helloworld"'
 
 DEBUG = False
 
-__version__  = '0.3'
+__version__  = '0.5'
 
 LOGPATH = 'group.log'
 

@@ -184,6 +184,9 @@ class Client(JabberClient):
             name=item.name
         else:
             name=u""
+        email = '%s@%s' % (item.jid.node, item.jid.domain)
+        if not get_member(email):
+            add_member(item.jid)
         print (u'%s "%s" subscription=%s groups=%s'
                 % (unicode(item.jid), name, item.subscription,
                     u",".join(item.groups)) )

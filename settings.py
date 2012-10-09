@@ -18,8 +18,11 @@ DEBUG = False
 
 __version__  = '0.3'
 
-
 LOGPATH = 'group.log'
+
+PIDPATH = r'pybot.pid'
+
+DAEMONACCOUNT = ('cnpytoner@gmail.com', 'daemonis$ESZ')
 
 ###### 下面设置不生效 #################
 

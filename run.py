@@ -140,7 +140,6 @@ class Daemon():
                 logger.info('done')
                 logger.info('bot started with pid %d' % r.pid)
                 self.PID = r.pid
-            time.sleep(30)
 
     def __del__(self):
         if self.PID > 0:

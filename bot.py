@@ -14,7 +14,7 @@ from cmd import send_all_msg, send_command
 from db import add_member, del_member, change_status
 from db import logger
 from settings import __version__
-from settings import DEBUG
+from settings import DEBUG, DAEMONACCOUNT
 
 
 class BotHandler(object):
@@ -86,23 +86,28 @@ class BotHandler(object):
         t=stanza.get_type()
         status=stanza.get_status()
         show=stanza.get_show()
-        if t=="unavailable":
-            msg+=u"unavailable"
-            change_status(frm, 0, show)
-        else:
-            msg+=u"available"
-            change_status(frm, 1, show)
-        if show:
-            msg+=u"(%s)" % (show,)
+        frm_email = '%s@%s' % (frm.node, frm.domain)
+        if frm_email != DAEMONACCOUNT[0]:
+            if t=="unavailable":
+                msg+=u"unavailable"
+                change_status(frm, 0, show)
+            else:
+                msg+=u"available"
+                change_status(frm, 1, show)
+            if show:
+                msg+=u"(%s)" % (show,)
 
-        if status:
-            msg+=u": "+status
-        logger.info(msg)
+            if status:
+                msg+=u": "+status
+            logger.info(msg)
 
     def presence_control(self,stanza):
         msg=unicode(stanza.get_from())
         t=stanza.get_type()
         frm = stanza.get_from()
+        frm_email = '%s@%s' % (frm.node, frm.domain)
+        if frm_email == DAEMONACCOUNT[0]:
+            return stanza.make_accept_response()
         if t=="subscribe":
             msg+=u" has requested presence subscription."
             body = "%s 加入群" % frm.node

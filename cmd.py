@@ -28,6 +28,7 @@ from db import add_history
 from db import is_online
 from db import get_history
 from db import logger
+from db import del_member
 from pyxmpp.all import Message
 from pyxmpp.all import JID
 from pyxmpp.all import Presence
@@ -391,8 +392,21 @@ class AdminCMDHandle(CommandHandler):
 
 
     def rm(self, stanza, *args):
-        """剔除用户"""
-        pass
+        """剔除用户($rm nick1 nick2 nick3...)"""
+        emails = [get_member(nick = n) for n in args]
+        if emails >= 1:
+            p = []
+            for e in emails:
+                jid = JID(e)
+                p.append(
+                    Presence(
+                        to_jid = jid,
+                        stanza_type='unsubscribe'
+                        ))
+                del_member(jid)
+        else:
+            p = self.help(stanza, 'rm')
+        return p
 
 
 

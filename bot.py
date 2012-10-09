@@ -93,6 +93,8 @@ class BotHandler(object):
                 change_status(frm, 0, show)
             else:
                 msg+=u"available"
+                if not get_member(frm_email) and frm_email != USER:
+                    add_member(frm)
                 change_status(frm, 1, show)
             if show:
                 msg+=u"(%s)" % (show,)

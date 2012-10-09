@@ -11,7 +11,7 @@ from pyxmpp.interfaces import *
 from pyxmpp.streamtls import TLSSettings
 from settings import USER, PASSWORD
 from cmd import send_all_msg, send_command
-from db import add_member, del_member, change_status
+from db import add_member, del_member, change_status, get_member
 from db import logger
 from settings import __version__
 from settings import DEBUG, DAEMONACCOUNT

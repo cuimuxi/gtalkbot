@@ -358,8 +358,8 @@ class CommandHandler(object):
         try:
             logger.info('%s run cmd %s', email, c)
             m =getattr(self, c)(stanza, *args)
-        except Exception as e:
-            logger.warning('Error %s', e.message)
+        except Exception ,e:
+            logger.warning('Error: line %d: %s', e.errno, e.strerror)
             m = self._send_cmd_result(stanza, 'error')
 
         return m

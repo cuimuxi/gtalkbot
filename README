@@ -1,15 +1,14 @@
-2012-09-27 12:30
-新添加一张表,如果之前本地存在了group.db这个数据库文件如要手工工添加这张表
+只测试过linux平台
+安装:
+    依赖模块:
+        pyxmpp(dnspython)
+配置:
+    配置文件使用python文件格式,很简单,
+    需要填入bot的用户名和密码
+启动:
+    执行run.py启动,
+    停止须直接找到pid使用kill
 
->>> import sqlite3
->>> conn = sqlite3.connect('{YOURBOTPAHT}/group.db')
->>> cursor = conn.cursor()
->>> cursor.execute("""
-              create table status(
-              email VARCHAR,
-              resource VARCHAR,
-              status INTEGER DEFAULT 1,
-              statustext VARCHAR,
-              """
-              )
->>> conn.commit()
+
+
+*** 分支 clubot使用pyxmpp2重写,最新代码可以查看pyxmpp2

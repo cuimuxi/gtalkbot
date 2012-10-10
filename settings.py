@@ -10,9 +10,9 @@ sys.setdefaultencoding('utf-8')
 
 ADMINS = ['coldnight.linux@gmail.com']
 
-USER = 'pythonerclub@gmail.com'
+USER = 'example@gmail.com'
 
-PASSWORD = 'print"helloworld"'
+PASSWORD = 'examplepassword'
 
 DEBUG = False
 
@@ -22,7 +22,7 @@ LOGPATH = 'group.log'
 
 PIDPATH = r'pybot.pid'
 
-DAEMONACCOUNT = ('cnpytoner@gmail.com', 'daemonis$ESZ')
+DAEMONACCOUNT = ('daemon@gmail.com', 'daemonpasswd')
 
 ###### 下面设置不生效 #################
 

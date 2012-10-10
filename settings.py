@@ -10,7 +10,7 @@ sys.setdefaultencoding('utf-8')
 
 ADMINS = ['coldnight.linux@gmail.com']
 
-USER = 'blog.linuxzen@gmail.com'
+USER = 'pythonerclub@gmail.com'
 
 PASSWORD = ''
 
@@ -18,9 +18,9 @@ DEBUG = False
 
 __version__ = '0.3'
 
-PIDPATH = r'logs/pybot.pid'
+PIDPATH = r'logs/clubot.pid'
 
-LOGPATH = r'logs/group.log'
+LOGPATH = r'logs/clubot.log'
 
 
 DB_NAME="group.db"

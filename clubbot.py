@@ -26,7 +26,7 @@ from pyxmpp2.roster import RosterReceivedEvent
 from pyxmpp2.interfaces import XMPPFeatureHandler
 from pyxmpp2.interfaces import presence_stanza_handler, message_stanza_handler
 from pyxmpp2.ext.version import VersionProvider
-from settings import USER,PASSWORD, DEBUG, PIDPATH, LOGPATH
+from settings import USER,PASSWORD, DEBUG, PIDPATH, LOGPATH, __version__, status
 from plugin.db import add_member, del_member, get_member, change_status
 from plugin.cmd import send_all_msg, send_command
 
@@ -43,9 +43,10 @@ def new_member(frm):
 
 class BotChat(EventHandler, XMPPFeatureHandler):
     def __init__(self):
-        my_jid = JID(USER)
+        my_jid = JID(USER+'/Bot')
         settings = XMPPSettings({
-                            "software_name": "Pythoner Club",
+                            "software_name": "Clubot",
+                            "software_version": __version__,
                             "tls_verify_peer": False,
                             "starttls": True,
                             "ipv6":False
@@ -151,12 +152,15 @@ class BotChat(EventHandler, XMPPFeatureHandler):
     def handle_disconnected(self, event):
         return QUIT
 
+
     @property
     def roster(self):
         return self.client.roster
 
     @event_handler(RosterReceivedEvent)
     def handle_roster_received(self, event):
+        p = Presence(status=status)
+        self.client.stream.send(p)
         ret = [x.jid for x in self.roster if x.subscription == 'both']
         logging.info(' -- roster:{0}'.format(ret))
         for frm in ret:

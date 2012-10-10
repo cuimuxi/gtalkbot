@@ -10,7 +10,7 @@ sys.setdefaultencoding('utf-8')
 
 ADMINS = ['coldnight.linux@gmail.com']
 
-USER = 'pythonerclub@gmail.com'
+USER = 'blog.linuxzen@gmail.com'
 
 PASSWORD = ''
 
@@ -22,8 +22,9 @@ PIDPATH = r'logs/clubot.pid'
 
 LOGPATH = r'logs/clubot.log'
 
-
 DB_NAME="group.db"
+
+status = u"Pythoner Club Linux/Vim/Python 技术交流"
 
 # DEBUG:10
 # INFO : 20

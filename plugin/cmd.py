@@ -424,12 +424,13 @@ def send_command(stanza, body):
 
 
 def send_msg(stanza, to_email, body):
-    typ = stanza.stanza_type,
+    typ = stanza.stanza_type
     if typ not in ['normal', 'chat', 'groupchat', 'headline']:
         typ = 'normal'
     m=Message(
         to_jid=JID(to_email),
         stanza_type=typ,
+        thread = stanza.thread,
         body=body)
     return m
 

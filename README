@@ -1,15 +1,2 @@
-2012-09-27 12:30
-新添加一张表,如果之前本地存在了group.db这个数据库文件如要手工工添加这张表
-
->>> import sqlite3
->>> conn = sqlite3.connect('{YOURBOTPAHT}/group.db')
->>> cursor = conn.cursor()
->>> cursor.execute("""
-              create table status(
-              email VARCHAR,
-              resource VARCHAR,
-              status INTEGER DEFAULT 1,
-              statustext VARCHAR,
-              """
-              )
->>> conn.commit()
+2012-10-10:
+    Rwrite With pyxmpp2

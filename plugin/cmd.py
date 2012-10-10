@@ -29,9 +29,10 @@ from db import is_online
 from db import get_history
 from db import logger
 from db import del_member
-from pyxmpp.all import Message
-from pyxmpp.all import JID
-from pyxmpp.all import Presence
+from db import get_email
+from pyxmpp2.message import Message
+from pyxmpp2.jid import JID
+from pyxmpp2.presence import Presence
 from fanyi import Complex
 from settings import __version__
 from settings import USER
@@ -40,7 +41,6 @@ from settings import ADMINS
 
 
 
-get_email = lambda frm:"%s@%s" % (frm.node, frm.domain)
 
 
 def http_helper(url, param = None, callback=None):
@@ -135,8 +135,8 @@ class CommandHandler(object):
     _cache = {}
     def list(self, stanza, *args):
         """列出所有成员"""
-        frm = stanza.get_from()
-        femail = "%s@%s" % (frm.node, frm.domain)
+        frm = stanza.from_jid
+        femail = get_email(frm)
         members = get_members()
         body = []
         for m in members:
@@ -183,10 +183,9 @@ class CommandHandler(object):
         """更改昵称 eg. $nick yournewnickname"""
         if len(args) >= 1:
             nick = ' '.join(args[0:])
-            frm = stanza.get_from()
-            email = "%s@%s" % (frm.node, frm.domain)
-            oldnick = get_nick(email)
-            r = edit_member(email, nick = nick)
+            frm = stanza.from_jid
+            oldnick = get_nick(frm)
+            r = edit_member(frm, nick = nick)
             if r:
                 body = "%s 更改昵称为 %s" % (oldnick, nick)
                 m = send_all_msg(stanza, body)
@@ -202,8 +201,7 @@ class CommandHandler(object):
     def code(self, stanza, *args):
         """<type> <code> 贴代码,可以使用$codetypes查看允许的代码类型"""
         if len(args) > 1:
-            email = get_email(stanza.get_from())
-            nick = get_nick(email)
+            nick = get_nick(stanza.from_jid)
             typ = args[0]
             codes = _add_commends(args[1:], typ, nick)
             codes = ''.join(codes[0:2]) + ' '.join(codes[2:])
@@ -267,11 +265,11 @@ class CommandHandler(object):
 
     def history(self, stanza, *args):
         """<from> <index> <size> 显示聊天历史"""
-        email = get_email(stanza.get_from())
+        sef = stanza.from_jid
         if args:
-            return self._send_cmd_result(stanza, get_history(email, *args))
+            return self._send_cmd_result(stanza, get_history(sef, *args))
         else:
-            return self._send_cmd_result(stanza, get_history(email))
+            return self._send_cmd_result(stanza, get_history(sef))
 
 
     def version(self, stanza, *args):
@@ -313,8 +311,8 @@ class CommandHandler(object):
 
     def _send_cmd_result(self, stanza, body):
         """返回命令结果"""
-        frm = stanza.get_from()
-        email = '%s@%s' % (frm.node, frm.domain)
+        frm = stanza.from_jid
+        email = get_email(frm)
         message = send_msg(stanza, email, body)
         return message
 
@@ -356,7 +354,7 @@ class CommandHandler(object):
     def _run_cmd(self, stanza, cmd):
         """获取命令"""
         c, args = self._parse_args(cmd)
-        email = get_email(stanza.get_from())
+        email = get_email(stanza.from_jid)
         try:
             logger.info('%s run cmd %s', email, c)
             m =getattr(self, c)(stanza, *args)
@@ -417,7 +415,7 @@ admin_run_cmd = AdminCMDHandle()._run_cmd
 
 def send_command(stanza, body):
     cmd = body[1:]
-    email = get_email(stanza.get_from())
+    email = get_email(stanza.from_jid)
     if email in ADMINS:
         m = admin_run_cmd(stanza, cmd)
     else:
@@ -426,18 +424,20 @@ def send_command(stanza, body):
 
 
 def send_msg(stanza, to_email, body):
+    typ = stanza.stanza_type,
+    if typ not in ['normal', 'chat', 'groupchat', 'headline']:
+        typ = 'normal'
     m=Message(
         to_jid=JID(to_email),
-        stanza_type=stanza.get_type(),
+        stanza_type=typ,
         body=body)
     return m
 
 def send_all_msg(stanza, body):
-    frm = stanza.get_from()
-    email = '%s@%s' % (frm.node, frm.domain)
-    nick = get_nick(email)
-    add_history(email, 'all', body)
-    tos = get_members(email)
+    frm = stanza.from_jid
+    nick = get_nick(frm)
+    add_history(frm, 'all', body)
+    tos = get_members(frm)
     ms = []
     if '@' in body:
         r = re.findall(r'@<(.*?)>', body)
@@ -459,9 +459,8 @@ def send_all_msg(stanza, body):
 
 
 def send_to_msg(stanza, to, body):
-    frm = stanza.get_from()
-    email = '%s@%s' % (frm.node, frm.domain)
-    nick = get_nick(email)
-    add_history(email, to, body)
+    frm = stanza.from_jid
+    nick = get_nick(frm)
+    add_history(frm, to, body)
     body = "[%s 悄悄对你说] %s" % (nick, body)
     return send_msg(stanza, to, body)

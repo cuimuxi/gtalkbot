@@ -10,24 +10,20 @@ sys.setdefaultencoding('utf-8')
 
 ADMINS = ['coldnight.linux@gmail.com']
 
-USER = 'pythonerclub@gmail.com'
+USER = 'blog.linuxzen@gmail.com'
 
-PASSWORD = 'print"helloworld"'
+PASSWORD = ''
 
 DEBUG = False
 
-__version__  = '0.5'
+__version__ = '0.3'
 
-LOGPATH = 'group.log'
+PIDPATH = r'logs/pybot.pid'
 
-PIDPATH = r'pybot.pid'
+LOGPATH = r'logs/group.log'
 
-DAEMONACCOUNT = ('cnpytoner@gmail.com', 'daemonis$ESZ')
 
-###### 下面设置不生效 #################
-
-PLUGINS = []
-
+DB_NAME="group.db"
 
 # DEBUG:10
 # INFO : 20

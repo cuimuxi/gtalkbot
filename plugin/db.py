@@ -16,6 +16,7 @@ import sqlite3
 from datetime import datetime
 from settings import DEBUG
 from settings import LOGPATH
+from settings import DB_NAME
 
 
 logger = logging.getLogger()
@@ -31,16 +32,17 @@ logger.setLevel(logging.INFO) # change to DEBUG for higher verbosity
 
 
 
-DB_NAME="group.db"
 
 NOW = lambda: datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+get_email = lambda frm:frm.bare().as_string()
 
 def _init_table():
     """
     初始化数据库
     """
-    if not os.path.exists(DB_NAME):
-        conn = sqlite3.connect(DB_NAME)
+    DB_PATH= os.path.join(os.path.split(__file__)[0], DB_NAME)
+    if not os.path.exists(DB_PATH):
+        conn = sqlite3.connect(DB_PATH)
         conn.isolation_level = None
         cursor = conn.cursor()
         """
@@ -106,7 +108,7 @@ def _init_table():
                       )
         conn.commit()
     else:
-        conn = sqlite3.connect(DB_NAME)
+        conn = sqlite3.connect(DB_PATH)
         conn.isolation_level = None
         cursor = conn.cursor()
 
@@ -137,7 +139,7 @@ def get_status(email, resource = None):
 
 def change_status(frm, status, statustext):
     """改变用户状态"""
-    email = "%s@%s" % (frm.node, frm.domain)
+    email = get_email(frm)
     resource = frm.resource
     stat = get_status(email, resource)
     if stat:
@@ -162,9 +164,9 @@ def is_online(email):
 now = datetime.now()
 def add_member(frm):
     cursor, conn = get_cursor()
-    name = frm.node
-    email = "%s@%s" % (name, frm.domain)
-    if get_member(email = email):return
+    name = frm.local
+    email = get_email(frm)
+    if get_member(frm):return
     sql = 'insert into members(email, name, nick, last, lastchange, date) VALUES(?,?,?,?,?,?)'
     cursor.execute(sql, (email, name, name, now, now, now))
     conn.commit()
@@ -174,7 +176,7 @@ def add_member(frm):
 
 def del_member(frm):
     cursor, conn = get_cursor()
-    email = "%s@%s" % (frm.node, frm.domain)
+    email = get_email(frm)
     sql = 'delete from members where email=?'
     cursor.execute(sql, (email,))
     conn.commit()
@@ -182,8 +184,9 @@ def del_member(frm):
     conn.close()
 
 
-def edit_member(email, nick = None, last=None):
+def edit_member(frm, nick = None, last=None):
     cursor, conn = get_cursor()
+    email = get_email(frm)
     if nick:
         cursor.execute('select * from members where nick=?',(nick,))
         if cursor.fetchall():return False
@@ -200,7 +203,7 @@ def edit_member(email, nick = None, last=None):
     return True
 
 
-def get_member(email = None, uid = None, nick = None):
+def get_member(frm = None, uid = None, nick = None):
     """
     提供email返回id
     提供uid返回email
@@ -210,7 +213,8 @@ def get_member(email = None, uid = None, nick = None):
     if uid:
         sql = 'select email from members where id=?'
         param = (int(uid),)
-    elif email:
+    elif frm:
+        email = get_email(frm)
         sql = 'select id from members where email=?'
         param = (email, )
     elif nick:
@@ -226,12 +230,13 @@ def get_member(email = None, uid = None, nick = None):
     return result
 
 
-def get_members(email = None):
+def get_members(frm= None):
     """
     获取所有成员
     """
     cursor, conn = get_cursor()
-    if email:
+    if frm:
+        email = get_email(frm)
         sql = 'select email from members where email !=?'
         param = (email, )
         cursor.execute(sql, param)
@@ -247,10 +252,10 @@ def get_members(email = None):
     return result
 
 
-def get_nick(email = None, uid = None):
+def get_nick(frm= None, uid = None):
     cursor, conn = get_cursor()
-    print email
-    if email:
+    if frm:
+        email = get_email(frm)
         sql = 'select nick from members where email =?'
         param = (email,)
     elif uid:
@@ -267,8 +272,9 @@ def get_nick(email = None, uid = None):
 
 def add_history(frm, to, content):
     cursor, conn = get_cursor()
+    frmemail = get_email(frm)
     sql = 'insert into history(frmemail, toemail, content, date) VALUES(?,?,?,?)'
-    param = (frm, to, content, now)
+    param = (frmemail, to, content, now)
     cursor.execute(sql, param)
     conn.commit()
     cursor.close()
@@ -279,7 +285,7 @@ def get_history(sef, frm = None, index = 1,  size = 10):
     cursor, conn = get_cursor()
     limit = int(size)
     skip = (int(index) -1) * 10
-
+    sef = get_email(sef)
     basesql = 'select id, frmemail, toemail, content, date from history where '
 
     if not frm or frm.strip() == 'all':
